@@ -17,6 +17,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Write", "Edit", "Skill", "PowerShell"]
 - `${CLAUDE_PLUGIN_ROOT}/shared/shotlist-contract.md` — формула сборки промпта
 - `${CLAUDE_PLUGIN_ROOT}/shared/RULES.md` — R01, R02, R04, R05, R06, R07
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/05-ai-video-craft.md` — структура промпта: субъект+действие → камера → свет → стиль
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/09-frame-craft.md` — раздел 1: из чего собирается киношный промпт
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/10-physics-in-motion.md` — как писать движение, чтобы у него была физика (motion сцен)
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/11-two-people-closeness.md` — если в кадре двое: поза, касание, вес
 - `${CLAUDE_PLUGIN_ROOT}/shared/motion-refs/` — если движение сцены есть на полке, слова для motion

@@ -16,6 +16,7 @@ tools: ["Read", "Grep", "Glob", "Write", "Skill"]
 - `clip-memory/song/grid.json`, `structure.md` — разделы трека, на которые ложится арка
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/01-music-video-forms.md` — формы клипа и арка по разделам
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/02-treatment-and-script.md` — что обязано быть в тритменте
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/08-dramaturgy-short-form.md` — три акта, твист, цикличность, герой за четыре поля (СТНЦ)
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/12-reality-register.md` — регистр клипа (real / heightened / fantasy) и его
   `miracle`: выбрать и записать в тритмент, раскадровка переносит в шот-лист. Чудо одно и названо
 

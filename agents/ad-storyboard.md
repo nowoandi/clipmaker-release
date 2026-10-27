@@ -14,7 +14,10 @@ tools: ["Read", "Grep", "Glob", "Bash", "Write", "Skill", "PowerShell"]
 Обязательно прочитай перед работой:
 - `clip-memory/product/product.json` и фото из `clip-memory/product/photos/` — посмотри их глазами
 - `${CLAUDE_PLUGIN_ROOT}/shared/ads/shotlist-ad-contract.md` — формат, который проверяет `gate_ad_script.py`
+- `${CLAUDE_PLUGIN_ROOT}/shared/ads/03-craft.md` — ремесло рекламы и что к товару не переносится
 - `${CLAUDE_PLUGIN_ROOT}/shared/ads/04-hooks.md` — крючок первых секунд: что измерено и чего нет
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/09-frame-craft.md` — разделы 3, 6, 8: акцент, планы, шум в кадре, движение и акты в рекламе
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/08-dramaturgy-short-form.md` — акты, твист, тест «выключи звук»
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/06-classic-rules.md` — раздел «Склейка в AI-роликах»
 
 Ты не запускаешь Task. Директор говорит, какая работа сейчас: **бриф ролика** (`treatment.md`)

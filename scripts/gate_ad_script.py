@@ -30,7 +30,7 @@ from gate_script import SIZES, ANGLES, MOVES, known_anchors
 
 ACTS = ("intro", "turn", "main", "outro")
 SHOT_LIMITS = {"card": (2, 6), "ad": (3, 7)}
-OUTRO_SOFT_MAX = 5.0       # наблюдение практиков короткой формы, не закон
+OUTRO_SOFT_MAX = 5.0       # наблюдение практиков короткой формы, не закон (cinema/08)
 SUM_TOLERANCE = 0.5        # секунд: сумма планов против длительности ролика
 DEFAULT_PRODUCT_ANCHOR = "product"
 # Схема «звезда» Кулешова (cinema/06, п. 9): красные стрелки — Дальний с Крупным, Общий с Деталью.
@@ -167,11 +167,11 @@ def check(pdir):
                 problems.append(f"{shots[-1].get('id')}: последний кадр — не outro (развязка)")
             if "turn" not in acts:
                 warnings.append("нет кадра с act=turn: события, которое выталкивает из первого акта во "
-                                "второй. Без крючка ролик остаётся описанием")
+                                "второй. Без крючка ролик остаётся описанием (cinema/08)")
             outro_sec = sum(s.get("sec") or 0 for s in shots if s.get("act") == "outro")
             if outro_sec > OUTRO_SOFT_MAX:
                 warnings.append(f"развязка {outro_sec:g} с — дольше {OUTRO_SOFT_MAX:g} с; в короткой форме финал обычно сокращают "
-                                f"до пяти секунд (не проверено нашим прогоном)")
+                                f"до пяти секунд (cinema/08, не проверено нашим прогоном)")
 
     # Соседи.
     for i in range(1, len(shots)):

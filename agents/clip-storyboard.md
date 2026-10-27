@@ -18,6 +18,7 @@ tools: ["Read", "Grep", "Glob", "Bash", "Write", "Skill", "PowerShell"]
 - `${CLAUDE_PLUGIN_ROOT}/shared/shotlist-contract.md` — формат, который проверяет `gate_script.py`
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/02-treatment-and-script.md`, `04-editing-to-music.md`
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/06-classic-rules.md` — раздел «Склейка в AI-роликах»: правило локации, объект-проводник, никаких эффектов-переходов; правило шести — склейка, которая жертвует критерием, называет его в `note` (жертвуют снизу вверх: пространство, плоскость, взгляд, ритм; эмоцию и историю — никогда)
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/08-dramaturgy-short-form.md` — акты, твист, тест «выключи звук»
 - `${CLAUDE_PLUGIN_ROOT}/shared/motion-refs/README.md` — полка движений: каждое движение плана сначала
   искать там (эталон и «так не бывает»); нет на полке — строка в `shared/motion-refs/wanted.md`, а в
   `note` кадра — «движение без эталона», чтобы приёмка смотрела туда первой

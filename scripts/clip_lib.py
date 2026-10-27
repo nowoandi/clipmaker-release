@@ -511,7 +511,7 @@ def frames_review_problems(pdir, scene_ids, project_name=None):
 # <проект>, заход 2, 13.10.2026: якорь места «стена заполняет кадр, простая скамья,
 # фонаря, неба, людей нет» — голая кирпичная стена. Админ: «Ужасная скамейка, ужасная стена …
 # В парке стена павильона … кушают мороженое вечером, фонарик, красиво. А тут голая стена. В чём
-# здесь красота?» Правила сет-дизайна (три плана, шум, 1–3 цвета,
+# здесь красота?» Правила сет-дизайна (cinema/09 разд. 6: три плана, шум, 1–3 цвета,
 # говорящий реквизит) стояли у художника в списке «прочитай», но ни одно поле выхода их не
 # требовало — и они не применились. Теперь у места это обязательные поля задания на якорь.
 PLACE_PLANES = ("fore", "mid", "back")
@@ -534,16 +534,17 @@ def place_set_problems(brief):
         missing = [p for p in PLACE_PLANES if not str(planes.get(p) or "").strip()]
         if missing:
             errors.append(f"место {name}: в set.planes пусто {', '.join(missing)} — два плана дают "
-                          "плоскость, три глубину")
+                          "плоскость, три глубину (cinema/09, разд. 6)")
         if not str(s.get("beauty_ru") or "").strip():
             errors.append(f"место {name}: нет set.beauty_ru — одной фразой, чем это место красиво "
                           "и почему здесь хочется быть")
         pal = s.get("palette") or []
         if not 1 <= len(pal) <= 3:
-            errors.append(f"место {name}: set.palette — 1–3 основных цвета, сейчас {len(pal)}")
+            errors.append(f"место {name}: set.palette — 1–3 основных цвета, сейчас {len(pal)} "
+                          "(cinema/09, разд. 6)")
         if not s.get("story_props"):
             errors.append(f"место {name}: нет set.story_props — что в месте работает на историю "
-                          "(говорящий реквизит)")
+                          "(говорящий реквизит, cinema/08 и 09)")
     return errors, warnings
 
 

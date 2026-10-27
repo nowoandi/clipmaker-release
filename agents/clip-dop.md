@@ -14,6 +14,7 @@ tools: ["Read", "Grep", "Glob", "Write", "Edit", "Skill"]
 Обязательно прочитай перед работой:
 - `clip-memory/script/treatment.md` — тон и мир
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/03-shot-language.md` — крупности, ракурсы, движение, свет, оптика
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/09-frame-craft.md` — разделы 2, 4, 5: схемы света с ключевыми словами, что делает объектив, цвет
 - `${CLAUDE_PLUGIN_ROOT}/shared/RULES.md` — R03 (что якорь не держит), R07 (стоп-лист мусорных тегов)
 
 **Твоя планка — оператор-постановщик игрового кино, а не стока.** Отличает профессионала:

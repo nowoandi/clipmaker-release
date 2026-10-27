@@ -32,7 +32,7 @@ import clip_lib as lib
 FORMATS = {"card", "ad"}
 PLATFORMS = {"wb", "ozon", "instagram", "tiktok", "youtube", "other"}
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp"}
-# Предел длины — ориентир, не закон: источник — ТЗ Админа
+# Предел длины — ориентир, не закон: источники для него — внешний разбор и ТЗ Админа
 # 10.10.2026 («короткие вставки»). Превышение — предупреждение.
 SOFT_MAX_SEC = {"card": 15, "ad": 30}
 

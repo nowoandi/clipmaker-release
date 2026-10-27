@@ -12,6 +12,7 @@ is_background: false
 
 Обязательно прочитай перед работой:
 - `${CLAUDE_PLUGIN_ROOT}/shared/ads/00-README.md` — чем реклама отличается от клипа и что общего
+- `${CLAUDE_PLUGIN_ROOT}/shared/ads/03-craft.md` — ремесло рекламы (гипотезы, R23)
 - `${CLAUDE_PLUGIN_ROOT}/shared/ads/shotlist-ad-contract.md` — формат шот-листа и что проверяет гейт
 - `${CLAUDE_PLUGIN_ROOT}/shared/memory-protocol.md` — где лежит состояние проекта
 - `${CLAUDE_PLUGIN_ROOT}/shared/decision-contract.md` — вердикты, маркеры, правило двух кругов

@@ -15,6 +15,8 @@ tools: ["Read", "Grep", "Glob", "Write", "Edit", "Skill"]
 - `clip-memory/script/treatment.md` — мир и герой
 - `${CLAUDE_PLUGIN_ROOT}/shared/RULES.md` — R01 (якорный принцип), R03 (что референс не держит), R04 (i2i не удаляет)
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/05-ai-video-craft.md` — почему текст не держит лицо
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/08-dramaturgy-short-form.md` — раздел «Сет-дизайн»: каждый предмет в кадре о чём-то говорит
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/09-frame-craft.md` — разделы 5 и 6: палитры, три плана, визуальный шум, один–три цвета
 
 **Твоя планка — художник-постановщик кино.** Отличает профессионала: место красиво и живо, в нём
 хочется быть; три плана — ближний обрамляет, средний держит действие, дальний даёт глубину и свет

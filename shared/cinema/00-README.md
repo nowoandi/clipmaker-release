@@ -14,6 +14,8 @@
 | `04-editing-to-music.md` | musicologist, storyboard, editor |
 | `05-ai-video-craft.md` | prompt-writer, production-designer, anchors, shoot |
 | `06-classic-rules.md` | storyboard, dop, editor, guardian |
+| `08-dramaturgy-short-form.md` | screenwriter, storyboard, production-designer, prompt-writer, guardian |
+| `09-frame-craft.md` | dop (2, 4, 5), production-designer (5, 6), prompt-writer (1), guardian |
 | `10-physics-in-motion.md` | dop, prompt-writer, guardian |
 | `11-two-people-closeness.md` | screenwriter, storyboard, dop, prompt-writer, guardian |
 | `12-reality-register.md` | screenwriter, dop, prompt-writer, guardian |
@@ -33,10 +35,16 @@
 а не сам по себе: незаметная подмена знания хуже устаревшего знания.
 
 10.10.2026 дописаны разделы из роликов, которые прислал Админ: композиция и киношный вид —
-в `03-shot-language.md`, якорь-лист — в `05-ai-video-craft.md`. Схема склейки — в `06`, п. 9.
+в `03-shot-language.md`, якорь-лист — в `05-ai-video-craft.md`. Позже в тот же день добавлен
+`09-frame-craft.md` — свет, композиция, оптика, цвет, сет-дизайн, акты в рекламе,
+консистентность по слоям; схема склейки — в `06`, п. 9.
 13.10.2026 — `10-physics-in-motion.md` и `11-two-people-closeness.md` (разведка по 25 источникам после
 брака <проект>: комки вместо пыли, рука мимо линии, пара «как неродные»), и полка движений
 `shared/motion-refs/` — раскадровки движений из жизни и из своего брака. Все помечены непроверенными
-(R23): это чужие обещания, пока наш прогон не даст числа. Откуда взяты и чего в них нет —
-`shared/ads/01-sources.md`. Там же порядок разбора ролика: смысл в речи и в надписях, а не
+(R23): это чужие обещания, пока наш прогон не даст числа. Как такие материалы разбираются и почему всё в них — гипотеза: `shared/ads/01-sources.md`. Там же порядок разбора ролика: смысл в речи и в надписях, а не
 в подписи к посту, и достаёт его `scripts/study_reel.py`.
+
+**Конспекты чужих материалов в базе не хранятся.** Прочитанное сразу становится правилом (с пометкой R23),
+а пересказ, имя автора и ссылки остаются вне базы. Решение Админа 27.10.2026: «Конспекты, если мы их не
+используем, их надо убрать. Если там какая-то информация полезная для нас была, то её надо было перенести
+сразу».

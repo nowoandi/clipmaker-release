@@ -52,7 +52,7 @@
 | Поле | Обязательно | Смысл |
 |---|---|---|
 | `id` | да | `S01`, `S02`… |
-| `act` | для `ad` | `intro`, `turn`, `main`, `outro` — акты |
+| `act` | для `ad` | `intro`, `turn`, `main`, `outro` — акты (`cinema/08-dramaturgy-short-form.md`) |
 | `sec` | да | длина плана **в секундах**, число > 0 |
 | `size`, `angle`, `movement` | да | словарь как у клипа (`gate_script.py`) |
 | `anchors` | да | имена якорей; пусто допустимо только с `"anchors_free": true` |

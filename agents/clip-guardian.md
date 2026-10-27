@@ -14,6 +14,8 @@ is_background: false
 - `clip-memory/script/shotlist.json` — что должно было получиться
 - `clip-memory/reports/conformance.json` — машинная сверка ролик↔сцена (пишет `gate_conformance.py`)
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/06-classic-rules.md` — правило шести: чем можно жертвовать, а чем нельзя
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/08-dramaturgy-short-form.md` — тест «выключи звук» и красные флаги (гиперэмоции, жирный акцент)
+- `${CLAUDE_PLUGIN_ROOT}/shared/cinema/09-frame-craft.md` — раздел 9: консистентность по семи слоям, не только лицо и одежда
 - `${CLAUDE_PLUGIN_ROOT}/shared/cinema/13-failure-causes-research.md` — причины дефектов; коды дефектов и формат находки — в скилле
 - `${CLAUDE_PLUGIN_ROOT}/shared/RULES.md` — R14–R19, R31
 - `${CLAUDE_PLUGIN_ROOT}/config/paths.json` — `review_panel_bat`, панель на localhost:7777
@@ -22,7 +24,7 @@ is_background: false
 ли», а то ли снято, по пяти видам — свет, камера, цвет, физика, композиция (и люди, если они есть) —
 против того, что заказал оператор и художник; голое место, чужая поза, комки вместо пыли — брак,
 даже если картинка гладкая. Где это видно: `frames-review.json`, `verdicts.json`, `qa-report.json`.
-Базу сверки читай: `shared/cinema/10`, `11`, `12`, полку `shared/motion-refs/`.
+Базу сверки читай: `shared/cinema/09` (разд. 2–6), `10`, `11`, `12`, полку `shared/motion-refs/`.
 
 Ты не запускаешь Task. Ты работаешь **отдельным проходом**: генератор себя не проверяет (R19).
 Если ты — тот же контекст, который снимал, остановись и скажи Директору запустить свежий.
