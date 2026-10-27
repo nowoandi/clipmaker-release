@@ -1,0 +1,44 @@
+{
+  "_comment": "ШАБЛОН: условные пути. Свои пропишите в копии этого файла вне плагина и задайте CLIPMAKER_CONFIG на копию. Ставка правил: R05 (длина промпта), R08-R11 (ресурсы), R22 (окружение Windows).",
+  "ffmpeg": "C:\\Tools\\ffmpeg\\ffmpeg.exe",
+  "grok_bridge": "C:\\ClipMaker\\grok-bridge",
+  "pipeline": "C:\\ClipMaker\\pipeline-v3",
+  "review_panel_bat": "C:\\ClipMaker\\grok-bridge\\ПРИЁМКА.bat",
+  "_project_roots_comment": "Где лежат проекты клипов. Их ищет clip_open.py — точка входа с рабочего стола. Папка считается проектом, если в ней есть project*.json или clip-memory/.",
+  "new_project_root": "C:\\ClipMaker\\projects",
+  "project_roots": [
+    "C:\\ClipMaker\\projects"
+  ],
+  "kie_prompt_warn": 600,
+  "kie_prompt_max": 900,
+  "_grok_price_comment": "Цена ОДНОЙ отправки Grok, % недельной квоты. grok_pct_per_send — цена неопознанного режима и строк журнала до 15.08.2026 (у них нет поля mode). По режимам: замеры интерфейса 27-29.09.2026 (22 видео на 39%, 35 картинок, пять замеров подряд) и 18.09.2026 (одна связка Agent, 1% -> 8%). Округлено вверх: заниженная цена разрешает отправку, которой в пуле нет, завышенная лишь оставляет остаток, а остаток видно замером.md. Зеркало этих чисел — PREIS/ALIAS в grok-bridge/budget.js: правим обе или ни одной.",
+  "grok_pct_per_send": 2,
+  "grok_pct_per_send_by_mode": {
+    "video": 1.8,
+    "bild": 0.4,
+    "agent": 7
+  },
+  "grok_mode_aliases": {
+    "Video": "video",
+    "prime": "video",
+    "Bild": "bild",
+    "image": "bild",
+    "Präzise Bearbeitung": "bild",
+    "Agent": "agent"
+  },
+  "_grok_measure_comment": "После скольких отправок предполёт требует замер интерфейса (node quota-read.js --save). Журнал видит только свои нажатия: 28.09.2026 между двумя замерами ушло +3% квоты при нуле отправок в журнале. 0 — требование выключено.",
+  "grok_measure_after_sends": 5,
+  "grok_week_budget_pct": 100,
+  "batch_max": 5,
+  "default_retries": 1,
+  "preflight_ttl_min": 30,
+  "assembly_tolerance_sec": 1.0,
+  "_fps_comment": "Допустимые частоты кадров финала. Вне набора gate_assembly.py предупреждает, но не бракует: 23,976 считается 24, 29,97 — 30. 50 fps считается ошибкой. Не проверено нашим прогоном; площадка может требовать своё.",
+  "assembly_fps_ok": [
+    24,
+    25,
+    30
+  ],
+  "_conformance_comment": "R31: порог расстояния Хэмминга между первым кадром ролика и его входным кадром. Замер прогона <проект>: свои 1-4, чужие 22-129 из 256.",
+  "conformance_max_dist": 12
+}

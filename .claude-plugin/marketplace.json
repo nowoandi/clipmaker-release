@@ -1,0 +1,17 @@
+{
+  "name": "clipmaker",
+  "owner": {
+    "name": "Andrej Hermann"
+  },
+  "metadata": {
+    "description": "ClipMaker — студия музыкальных AI-клипов: 16 ролей, гейты и хук в коде. Один плагин. EN: AI music-video studio for Claude Code — specialist roles from researcher to editor, rules enforced in code (gates and a hook); branches: music clip, product ad, Suno hook."
+  },
+  "plugins": [
+    {
+      "name": "clipmaker",
+      "source": "./",
+      "description": "AH · ClipMaker — студия музыкальных AI-клипов: 16 ролей от ресёрчера темы и сценариста до оператора, монтажёра и доктора. Тема и трек на входе, готовое решение на выходе. Ремесло кино в базе знаний, правила в коде: гейты бросают исключение, хук блокирует генерацию без шот-листа и съёмку без предполёта. Кадры Kie, движение Grok, монтаж от сетки такта. Ветки: клип, реклама, Suno-hook. Авторская разработка Andrej Hermann. EN: AI music-video studio for Claude Code — specialist roles from researcher to editor, rules enforced in code (gates and a hook); branches: music clip, product ad, Suno hook.",
+      "category": "productivity"
+    }
+  ]
+}

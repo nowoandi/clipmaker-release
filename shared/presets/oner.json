@@ -1,0 +1,74 @@
+{
+ "_comment": "R34. Пресет «Один непрерывный план с правилом контакта». Источник: ANNOTATION_video_prompts_ru.md (26.09.2026), пресет @followandbloom для Seedance 2.5, ужатый под 10 с Grok i2v. Текст в parts копируется дословно; меняются только переменные. Собирает scripts/preset_build.py, сверяет gate_prompts.py.",
+ "id": "oner",
+ "vars": {
+  "subject": {
+   "type": "str",
+   "required": true,
+   "help_ru": "главный предмет плана, коротко по-английски: 'the small disc'. Если предмет держит якорь, слово не из canon.silence"
+  },
+  "macro": {
+   "type": "str",
+   "required": true,
+   "help_ru": "самая фактурная поверхность, с которой план открывается экстремальным макро"
+  },
+  "path": {
+   "type": "list",
+   "required": true,
+   "min": 2,
+   "max": 4,
+   "help_ru": "2–4 РЕАЛЬНЫЕ детали предмета по порядку прохода камеры"
+  },
+  "magic": {
+   "type": "str",
+   "required": false,
+   "help_ru": "один «волшебный» момент: деталь меняется сама, без рук. Ровно одна строка, не список"
+  },
+  "wide": {
+   "type": "str",
+   "required": false,
+   "help_ru": "что видно на отъезде; нет — весь план остаётся в контакте"
+  },
+  "hold_end": {
+   "type": "bool",
+   "required": false,
+   "default": false,
+   "help_ru": "статика последние 0,5 с — чистая точка склейки на сильную долю"
+  }
+ },
+ "split": 0.6,
+ "split_if": "wide",
+ "parts": [
+  {
+   "text": "One continuous shot, no cuts: one camera on one unbroken path; every change of view comes from camera movement, never from a new position."
+  },
+  {
+   "text": "{Subject} stays in frame from first to last frame; the camera stays close, glides over its surfaces and around its edges and never leaves it."
+  },
+  {
+   "text": "{t0}-{t1} s: opens on an extreme macro of {macro}, already moving in a slow arc, then glides along {path}."
+  },
+  {
+   "if": "magic",
+   "text": "Once, {magic} by itself, no hands; the camera follows without leaving the surface."
+  },
+  {
+   "if": "wide",
+   "text": "{t1}-{t2} s: pulls back smoothly to {wide}, slow three-quarter orbit."
+  },
+  {
+   "if": "hold_end",
+   "text": "Last half second: camera and {subject} completely still."
+  },
+  {
+   "text": "Gimbal-smooth, natural motion blur, no zoom, no whip pans."
+  }
+ ],
+ "fallback_auto": {
+  "B": {
+   "_why_ru": "вариант B аннотации: модель режет план — две детали, без волшебного момента",
+   "path": ":2",
+   "magic": null
+  }
+ }
+}

@@ -1,0 +1,67 @@
+{
+  "_comment": "Шаблон project.json нового клипа. Скопировать в папку проекта, заполнить. Единственный источник правды: канон, якоря, сцены, сетка такта. Скрипты канона не знают (R08: правила в коде, данные в json).",
+  "project": "NAME",
+  "song": {
+    "file": "song.mp3",
+    "duration": 0,
+    "bpm": 0,
+    "beat": 0,
+    "bar": 0,
+    "first_beat": 0,
+    "_comment": "bpm/beat/bar/first_beat снимаются с трека (librosa beat_track + подгонка фазы), не на глаз. R20."
+  },
+  "canon": {
+    "_comment": "R01: всё постоянное — якорем, словами не описывается. R03: что якорь не держит — в must. R05: короткие варианты обязательны.",
+    "refs": {},
+    "ref_rule": "Keep exactly the same object and the same place as in the reference image: same shapes, same materials, same colours and the same light. Only the camera angle, the framing and the distance change.",
+    "ref_rule_short": "Keep the same object and place as in the reference image; only the camera angle and framing change.",
+    "must": [],
+    "must_short": "",
+    "style": "",
+    "style_short": "",
+    "neg": "",
+    "neg_short": "",
+    "silence": [],
+    "rigid": {},
+    "_rigid_comment": "R35: якорь -> одна фраза жёсткости по-английски; дописывается в движение сцен с этим якорем.",
+    "style_mods": [],
+    "_style_mods_comment": "R36: 0-3 модификатора стиля словами, не слеш-кодами.",
+    "_silence_comment": "R02: слова, которые ЗАПРЕЩЕНО употреблять в текстах сцен, потому что эту вещь держит якорь (например dress, shoes). gate_prompts.py проверяет."
+  },
+  "image": {
+    "model_t2i": "gpt-image-2-text-to-image",
+    "model_i2i": "gpt-image-2-image-to-image",
+    "aspect_ratio": "9:16",
+    "resolution": "1K"
+  },
+  "video": {
+    "provider": "bridge",
+    "resolution": "720p",
+    "duration": 10,
+    "aspect_ratio": "9:16",
+    "_comment": "provider: bridge (Grok Desktop, бесплатно, квота) | api (Kie, платно). Тихий фолбэк bridge→api запрещён — только явное решение."
+  },
+  "render": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "crf": 18,
+    "audio_fade_out": 3.0
+  },
+  "edit": {
+    "_comment": "R20: монтаж от сетки такта. Разделы песни и длина плана в долях. Заполняется после анализа трека.",
+    "sections": []
+  },
+  "scenes": [
+    {
+      "id": "S01",
+      "block": 1,
+      "t": [0, 0],
+      "cut": 0,
+      "enabled": true,
+      "refs": [],
+      "scene": "",
+      "motion": ""
+    }
+  ]
+}

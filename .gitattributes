@@ -1,0 +1,5 @@
+# Концы строк: LF на любой машине. YAML-шапки навыков и агентов и скрипты не должны зависеть от
+# настройки git autocrlf (с CRLF шапка навыка suno-hook не читалась). Исключение — .bat: cmd ждёт CRLF.
+* text=auto eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf

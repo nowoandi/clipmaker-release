@@ -1,0 +1,692 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Студия ClipMaker</title>
+<style>
+/* ── Монтажная аппаратная: графит, сигнальные индикаторы, приборная типографика.
+   Только системные шрифты — панель обязана открываться без интернета.
+   Bahnschrift это DIN 1451, шрифт приборных панелей; Consolas — тайм-коды. ── */
+:root{
+  --void:#070a09; --deck:#0c1211; --panel:#111917; --raise:#16201e; --lift:#1c2825;
+  --line:#1e2b28; --line2:#2b3c37;
+  --ink:#eaf3ef; --dim:#809891; --faint:#55665f;
+  --signal:#3fe3b8; --amber:#eaa85c; --rec:#ff5a6e; --blue:#5fabe6;
+  --slab:'Bahnschrift','DIN Alternate','Franklin Gothic Medium','Segoe UI',sans-serif;
+  --mono:'Cascadia Mono','Consolas','SF Mono',monospace;
+  --sans:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif;
+  --r:12px;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--void);color:var(--ink);font:14px/1.6 var(--sans);
+     -webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:200;opacity:.3;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.3'/%3E%3C/svg%3E");
+  mix-blend-mode:overlay}
+::selection{background:var(--signal);color:#04150f}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--void)}
+::-webkit-scrollbar-thumb{background:var(--line2);border-radius:7px;border:3px solid var(--void)}
+button{font:inherit}
+
+.app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+
+/* ── пульт ─────────────────────────────────────────────────────────────── */
+aside{background:linear-gradient(180deg,#0d1413,#080d0c);border-right:1px solid var(--line);
+  position:sticky;top:0;height:100vh;display:flex;flex-direction:column;z-index:20}
+.brand{padding:22px 20px 16px;border-bottom:1px solid var(--line)}
+.mark{font:600 10px/1 var(--slab);letter-spacing:.26em;color:var(--signal);text-transform:uppercase;
+  display:flex;align-items:center;gap:8px}
+.mark i{width:6px;height:6px;border-radius:50%;background:var(--signal);
+  box-shadow:0 0 12px var(--signal);animation:pulse 2.8s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.3;transform:scale(.8)}}
+.projbtn{background:none;border:0;padding:0;margin-top:12px;display:flex;align-items:center;
+  gap:8px;cursor:pointer;color:var(--ink);width:100%;text-align:left}
+.projbtn .proj{font:600 19px/1.15 var(--slab);letter-spacing:.01em;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.projbtn .caret{color:var(--faint);font-size:10px;transition:.2s}
+.projbtn:hover .proj{color:var(--signal)}
+.projbtn:hover .caret{color:var(--signal)}
+.projlist{margin-top:10px;border:1px solid var(--line2);border-radius:10px;overflow:hidden;
+  background:var(--deck);box-shadow:0 12px 30px #0008}
+.projlist div{padding:10px 12px;cursor:pointer;border-bottom:1px solid var(--line);transition:.14s}
+.projlist div:last-child{border-bottom:0}
+.projlist div:hover{background:var(--lift)}
+.projlist b{display:block;font:600 12.5px/1.2 var(--slab)}
+.projlist span{display:block;font:400 10px/1.3 var(--mono);color:var(--faint);margin-top:4px}
+.projlist .cur b{color:var(--signal)}
+
+nav{padding:12px 0;flex:1;overflow-y:auto}
+nav button{display:flex;width:100%;align-items:center;gap:11px;background:none;border:0;
+  color:var(--dim);padding:11px 20px;font:500 13.5px/1 var(--sans);cursor:pointer;
+  border-left:2px solid transparent;transition:.16s;text-align:left;position:relative}
+nav button .num{font:600 9.5px/1 var(--mono);color:var(--faint);letter-spacing:.06em;width:14px}
+nav button .cnt{margin-left:auto;font:600 11px/1 var(--mono);color:var(--faint)}
+nav button:hover{color:var(--ink);background:#ffffff07}
+nav button.on{color:var(--ink);background:linear-gradient(90deg,#3fe3b816,transparent 70%);
+  border-left-color:var(--signal)}
+nav button.on .num{color:var(--signal)}
+nav .sep{height:1px;background:var(--line);margin:10px 20px}
+nav button.accent{color:var(--signal)}
+nav button.accent .num{color:var(--signal);font-size:14px}
+.foot{padding:13px 20px;border-top:1px solid var(--line);font:400 10px/1.5 var(--mono);
+  color:var(--faint)}
+
+/* ── шапка проекта ─────────────────────────────────────────────────────── */
+main{min-width:0;padding-bottom:70px}
+.hero{position:relative;padding:34px 40px 26px;border-bottom:1px solid var(--line);overflow:hidden}
+.hero .bg{position:absolute;inset:0;background-size:cover;background-position:center;
+  filter:blur(34px) saturate(.6);opacity:.3;transform:scale(1.25)}
+.hero::after{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,#070a09b0,#070a09f2 85%),
+             radial-gradient(80% 100% at 15% 0%,#3fe3b81a,transparent 60%)}
+.hero > *{position:relative;z-index:2}
+.hero h1{font:600 34px/1.05 var(--slab);margin:0;letter-spacing:.005em}
+.hero .sub{color:var(--dim);font-size:13px;margin-top:9px;max-width:80ch}
+.meta{display:flex;gap:26px;flex-wrap:wrap;margin-top:20px}
+.meta div b{display:block;font:600 21px/1 var(--mono);letter-spacing:-.02em}
+.meta div span{display:block;font:500 9.5px/1 var(--sans);color:var(--dim);margin-top:6px;
+  text-transform:uppercase;letter-spacing:.15em}
+.meta div.sig b{color:var(--signal)} .meta div.rec b{color:var(--rec)}
+
+.body{padding:26px 40px;animation:fade .28s both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2.sec{font:600 11px/1 var(--slab);letter-spacing:.2em;text-transform:uppercase;color:var(--dim);
+  margin:0 0 14px;display:flex;align-items:center;gap:12px}
+h2.sec::after{content:'';flex:1;height:1px;background:var(--line)}
+h2.sec em{font:400 10px/1 var(--mono);color:var(--faint);font-style:normal}
+.hint{color:var(--dim);font-size:12.5px}
+
+/* ── дорожка этапов ────────────────────────────────────────────────────── */
+.track{display:flex;align-items:flex-start;margin:0 0 30px;position:relative}
+.stage{flex:1;text-align:center;position:relative;padding-top:26px}
+.stage::before{content:'';position:absolute;top:8px;left:0;right:0;height:2px;background:var(--line)}
+.stage:first-child::before{left:50%} .stage:last-child::before{right:50%}
+.stage.done::before{background:linear-gradient(90deg,var(--signal),var(--signal))}
+.stage i{position:absolute;top:2px;left:50%;transform:translateX(-50%);width:14px;height:14px;
+  border-radius:50%;background:var(--deck);border:2px solid var(--line2);z-index:2;transition:.2s}
+.stage.done i{background:var(--signal);border-color:var(--signal);box-shadow:0 0 12px #3fe3b855}
+.stage.now i{border-color:var(--blue);background:var(--deck);
+  box-shadow:0 0 0 4px #5fabe622;animation:pulse 2s infinite}
+.stage b{display:block;font:500 11px/1.3 var(--sans);color:var(--dim)}
+.stage.done b{color:var(--ink)} .stage.now b{color:var(--blue)}
+.stage span{display:block;font:400 9.5px/1.3 var(--mono);color:var(--faint);margin-top:3px}
+
+/* ── конвейер ──────────────────────────────────────────────────────────── */
+.flow{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:0;
+  align-items:start;margin-bottom:8px}
+.col{padding:0 12px;position:relative}
+.col:not(:last-child)::after{content:'';position:absolute;right:-6px;top:38px;width:12px;height:12px;
+  border-top:2px solid var(--line2);border-right:2px solid var(--line2);transform:rotate(45deg)}
+.col-h{margin-bottom:14px}
+.col-h b{display:block;font:600 12px/1.2 var(--slab);letter-spacing:.14em;text-transform:uppercase}
+.col-h span{display:block;font:400 10.5px/1.4 var(--sans);color:var(--faint);margin-top:5px}
+.role{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  margin-bottom:9px;position:relative;overflow:hidden;animation:rise .34s both;transition:.16s}
+.role:hover{border-color:var(--line2);transform:translateX(2px)}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.role::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--line2)}
+.role.done::before{background:var(--signal)}
+.role.attention::before{background:var(--amber)}
+.role.blocker::before{background:var(--rec)}
+.role.next::before{background:var(--blue)}
+.role.next{border-color:#5fabe64d;background:linear-gradient(90deg,#5fabe60d,var(--panel) 60%)}
+.role b{display:block;font:600 13px/1.25 var(--slab)}
+.role .who{font:400 9.5px/1.3 var(--mono);color:var(--faint);margin-top:4px}
+.role .st{margin-top:8px;font:600 9.5px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;
+  color:var(--faint);display:flex;align-items:center;gap:6px}
+.role .st::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor}
+.role.done .st{color:var(--signal)} .role.attention .st{color:var(--amber)}
+.role.blocker .st{color:var(--rec)} .role.next .st{color:var(--blue)}
+.role .msg{margin-top:7px;font-size:11.5px;line-height:1.45;color:#a6bab4}
+
+/* ── плёнка и кадры ────────────────────────────────────────────────────── */
+.reel{margin:0 0 28px}
+.perf{height:10px;border-radius:3px;margin-bottom:8px;opacity:.45;
+  background:repeating-linear-gradient(90deg,var(--line2) 0 8px,transparent 8px 19px)}
+.sections{display:flex;gap:3px;height:32px;margin-bottom:4px}
+.sec-b{background:var(--raise);border:1px solid var(--line2);border-radius:5px;display:flex;
+  align-items:center;justify-content:center;overflow:hidden;font:500 10px/1 var(--sans);
+  letter-spacing:.12em;text-transform:uppercase;color:var(--dim);white-space:nowrap}
+.strip{display:flex;gap:3px;height:30px}
+.sh{border-radius:4px;cursor:pointer;transition:.15s;background:#1a2523;border:1px solid var(--line2)}
+.sh:hover{transform:translateY(-3px);border-color:var(--signal);box-shadow:0 6px 16px #0007}
+.sh.frame{background:linear-gradient(180deg,#223842,#16252b);border-color:#2d4a58}
+.sh.clip{background:linear-gradient(180deg,#1e3d35,#132a24);border-color:#2d5f50}
+.sh.rej{background:linear-gradient(180deg,#3d1e26,#26141b);border-color:#5f2d38}
+.ruler{display:flex;justify-content:space-between;font:500 9.5px/1 var(--mono);color:var(--faint);
+  margin-top:7px;letter-spacing:.05em}
+
+.cards{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(238px,1fr))}
+.shot{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  cursor:pointer;transition:.2s cubic-bezier(.2,.7,.3,1);animation:rise .38s both}
+.shot:hover{transform:translateY(-4px);border-color:var(--line2);
+  box-shadow:0 18px 40px #000a,0 0 0 1px #3fe3b826}
+.shot:hover .frameimg img{transform:scale(1.05)}
+.frameimg{aspect-ratio:var(--frame-ar,9/16);position:relative;overflow:hidden;display:flex;align-items:center;
+  justify-content:center;background:repeating-linear-gradient(45deg,#0f1614 0 9px,#0c1211 9px 18px)}
+.frameimg img,.frameimg video{width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+.frameimg video{object-fit:contain;background:#000}
+.frameimg .empty{font:500 9.5px/1.4 var(--sans);color:var(--faint);letter-spacing:.12em;
+  text-transform:uppercase}
+.slate{position:absolute;left:0;right:0;bottom:0;padding:10px 12px;display:flex;
+  justify-content:space-between;align-items:flex-end;gap:8px;
+  background:linear-gradient(180deg,transparent,#04070699 45%,#040706 100%)}
+.slate .sid{font:600 16px/1 var(--mono);letter-spacing:.07em}
+.slate .len{font:500 10px/1 var(--mono);color:var(--signal);letter-spacing:.06em}
+.dot{position:absolute;top:10px;right:10px;width:8px;height:8px;border-radius:50%;
+  box-shadow:0 0 0 3px #0c1211,0 0 10px currentColor}
+.dot.ok{background:var(--signal);color:var(--signal)}
+.dot.rec{background:var(--rec);color:var(--rec)}
+.dot.wait{background:var(--faint);color:transparent}
+.info{padding:12px 14px 14px}
+.spec{font:500 10.5px/1 var(--mono);color:var(--dim);letter-spacing:.05em;display:flex;gap:8px;
+  flex-wrap:wrap}
+.spec b{color:var(--ink);font-weight:600}
+.why{margin-top:9px;font-size:11.5px;line-height:1.5;color:#a6bab4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.chips{margin-top:10px;display:flex;gap:5px;flex-wrap:wrap}
+.chip{font:500 9.5px/1 var(--mono);letter-spacing:.07em;text-transform:uppercase;padding:4px 8px;
+  border-radius:5px;background:var(--raise);border:1px solid var(--line);color:var(--dim)}
+.chip.ok{color:var(--signal);border-color:#3fe3b840;background:#3fe3b810}
+.chip.rec{color:var(--rec);border-color:#ff5a6e40;background:#ff5a6e10}
+.chip.amb{color:var(--amber);border-color:#eaa85c40;background:#eaa85c10}
+.chip.blue{color:var(--blue);border-color:#5fabe640;background:#5fabe610}
+
+/* ── прочее ────────────────────────────────────────────────────────────── */
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font:500 9.5px/1 var(--sans);text-transform:uppercase;letter-spacing:.15em;color:var(--faint);
+  text-align:left;padding:0 14px 11px}
+td{border-top:1px solid var(--line);padding:12px 14px;vertical-align:top}
+tr:hover td{background:#ffffff04}
+td.k{color:var(--dim);width:180px;font:500 11px/1.5 var(--mono);letter-spacing:.04em}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px;
+  overflow:auto;font:400 12.5px/1.7 var(--mono);white-space:pre-wrap;word-break:break-word;
+  color:#b9cdc6}
+.tiles{display:grid;gap:11px;grid-template-columns:repeat(auto-fill,minmax(215px,1fr))}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:15px 17px;
+  cursor:pointer;transition:.17s;animation:rise .32s both}
+.tile:hover{border-color:var(--signal);transform:translateY(-3px);background:var(--raise);
+  box-shadow:0 12px 26px #0008}
+.tile b{display:block;font:600 13.5px/1.2 var(--slab)}
+.tile span{display:block;font:400 9.5px/1.4 var(--mono);color:var(--faint);margin-top:7px;
+  word-break:break-all}
+.doc{font-size:14.5px;line-height:1.75;color:#c9d9d3;max-width:72ch}
+.doc h1,.doc h2,.doc h3{font-family:var(--slab);color:var(--ink);margin:24px 0 10px;font-size:17px}
+.doc code{font:400 12.5px var(--mono);background:var(--raise);padding:2px 7px;border-radius:5px;
+  border:1px solid var(--line)}
+.next-card{background:linear-gradient(90deg,#5fabe614,transparent 70%);border:1px solid #5fabe63a;
+  border-left:3px solid var(--blue);border-radius:10px;padding:16px 20px;margin:0 0 26px}
+.next-card b{font:600 15px/1.3 var(--slab);letter-spacing:.02em}
+.next-card code{font:500 12px var(--mono);color:var(--blue)}
+.next-card .cmd{display:flex;align-items:center;gap:12px;margin-top:12px;flex-wrap:wrap}
+.next-card .cmd code{flex:1;min-width:220px;background:var(--void);border:1px solid var(--line2);
+  border-radius:9px;padding:12px 15px;font:500 14px var(--mono);color:var(--signal);user-select:all}
+.gatebar{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 24px}
+.empty-state{padding:60px 0;text-align:center;color:var(--faint)}
+.empty-state b{display:block;font:600 17px/1.2 var(--slab);color:var(--dim);margin-bottom:10px}
+
+/* форма */
+.form{max-width:680px}
+.field{margin-bottom:20px}
+.field label{display:block;font:500 9.5px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:8px}
+.field input,.field textarea{width:100%;background:var(--panel);border:1px solid var(--line2);
+  border-radius:10px;color:var(--ink);font:400 14px/1.6 var(--sans);padding:12px 15px;outline:none;
+  transition:.16s;resize:vertical}
+.field input::placeholder,.field textarea::placeholder{color:#4b5a55}
+.field input:focus,.field textarea:focus{border-color:var(--signal);box-shadow:0 0 0 3px #3fe3b81c;
+  background:var(--raise)}
+.field .tip{font-size:11.5px;color:var(--faint);margin-top:7px}
+.btn{background:var(--signal);color:#04150f;border:0;border-radius:10px;padding:13px 26px;
+  font:600 13px/1 var(--slab);letter-spacing:.06em;cursor:pointer;transition:.16s}
+.btn:hover{filter:brightness(1.1);transform:translateY(-2px);box-shadow:0 10px 26px #3fe3b833}
+.btn.ghost{background:var(--raise);color:var(--ink);border:1px solid var(--line2);box-shadow:none}
+.btn.ghost:hover{border-color:var(--signal);box-shadow:none}
+.done-card{border:1px solid #3fe3b84a;background:#3fe3b80d;border-radius:var(--r);padding:20px 22px;
+  margin-top:22px;animation:rise .3s both}
+.done-card code{display:block;background:var(--void);border:1px solid var(--line2);border-radius:9px;
+  padding:14px 16px;margin:14px 0;font:500 13.5px var(--mono);color:var(--signal);user-select:all;
+  word-break:break-all}
+
+dialog{background:var(--deck);color:var(--ink);border:1px solid var(--line2);border-radius:16px;
+  max-width:900px;width:93vw;padding:0;box-shadow:0 50px 110px #000d}
+dialog::backdrop{background:#03070699;backdrop-filter:blur(4px)}
+dialog .dh{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 22px;
+  border-bottom:1px solid var(--line)}
+dialog .dh b{font:600 16px/1 var(--slab);letter-spacing:.04em}
+dialog .dh .x{background:var(--raise);border:1px solid var(--line2);color:var(--dim);border-radius:8px;
+  padding:6px 13px;cursor:pointer;font:500 11px/1 var(--sans);transition:.15s}
+dialog .dh .x:hover{color:var(--ink);border-color:var(--signal)}
+dialog .dc{padding:20px 22px;max-height:76vh;overflow:auto}
+dialog video,dialog img{width:100%;max-height:46vh;object-fit:contain;background:#000;
+  border-radius:10px;border:1px solid var(--line)}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <div class="brand">
+      <div class="mark"><i></i>ClipMaker</div>
+      <button class="projbtn" id="projbtn" title="сменить проект">
+        <span class="proj" id="proj">—</span><span class="caret">▾</span>
+      </button>
+      <div class="projlist" id="projlist" hidden></div>
+    </div>
+    <nav id="nav">
+      <button data-t="overview" class="on"><span class="num">01</span>Обзор<span class="cnt"></span></button>
+      <button data-t="pipeline"><span class="num">02</span>Конвейер<span class="cnt" id="c-pipe"></span></button>
+      <button data-t="board"><span class="num">03</span>Раскадровка<span class="cnt" id="c-shots"></span></button>
+      <button data-t="canon"><span class="num">04</span>Канон<span class="cnt" id="c-anchors"></span></button>
+      <button data-t="material"><span class="num">05</span>Материал<span class="cnt" id="c-clips"></span></button>
+      <button data-t="docs"><span class="num">06</span>Документы<span class="cnt" id="c-docs"></span></button>
+      <button data-t="money"><span class="num">07</span>Деньги<span class="cnt"></span></button>
+      <div class="sep"></div>
+      <button data-t="newclip" class="accent"><span class="num">＋</span>Новый клип</button>
+    </nav>
+    <div class="foot" id="foot"></div>
+  </aside>
+
+  <main>
+    <div class="hero">
+      <div class="bg" id="herobg"></div>
+      <h1 id="h1">Загрузка</h1>
+      <div class="sub" id="sub"></div>
+      <div class="meta" id="meta"></div>
+    </div>
+    <div class="body" id="body"></div>
+  </main>
+</div>
+
+<dialog id="dlg">
+  <div class="dh"><b id="dlg-t"></b><button class="x" onclick="dlg.close()">закрыть · ESC</button></div>
+  <div class="dc" id="dlg-c"></div>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const SNAP = window.__SNAPSHOT__ || null;
+const media = rel => (SNAP && SNAP.media && SNAP.media[rel]) || (SNAP ? '' : '/media/' + rel);
+let S = null, TAB = 'overview', LAST_NEW = null;
+const FORM = {};   // введённое человеком переживает перерисовки
+
+const esc = t => String(t ?? '').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const beatsWord = n => { n=Number(n)||0; const t=n%100,o=n%10;
+  return n + (t>=11&&t<=14?' долей':o===1?' доля':o>=2&&o<=4?' доли':' долей'); };
+const tc = s => { s=Number(s)||0; const m=Math.floor(s/60), r=Math.floor(s%60);
+  return `${String(m).padStart(2,'0')}:${String(r).padStart(2,'0')}`; };
+const fmt = s => esc(s).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/`(.+?)`/g,'<code>$1</code>');
+
+function md(t){
+  const lines=String(t||'').split('\n'); let out=[],code=false,list=false;
+  for(let l of lines){
+    if(l.trim().startsWith('```')){out.push(code?'</pre>':'<pre>');code=!code;continue}
+    if(code){out.push(esc(l));continue}
+    const h=l.match(/^(#{1,4})\s+(.*)/);
+    if(h){if(list){out.push('</ul>');list=false}out.push(`<h${h[1].length}>${esc(h[2])}</h${h[1].length}>`);continue}
+    if(/^\s*[-*]\s+/.test(l)){if(!list){out.push('<ul>');list=true}out.push('<li>'+fmt(l.replace(/^\s*[-*]\s+/,''))+'</li>');continue}
+    if(list){out.push('</ul>');list=false}
+    out.push(l.trim()?'<p>'+fmt(l)+'</p>':'');
+  }
+  if(list)out.push('</ul>');
+  return out.join('\n');
+}
+
+async function load(opts){
+  if (opts && opts.auto && TAB === 'newclip') return;   // не стирать то, что печатают
+  S = SNAP ? SNAP.state : await (await fetch('/api/state')).json();
+  $('#proj').textContent = S.project_name;
+  document.documentElement.style.setProperty('--frame-ar', S.frame_ar || '9/16');
+  $('#foot').textContent = 'обновлено ' + S.generated_at;
+  $('#c-shots').textContent = S.shots.length || '';
+  $('#c-anchors').textContent = (S.anchors.length || Object.keys(S.canon_refs).length) || '';
+  $('#c-clips').textContent = S.counts.clips || '';
+  $('#c-docs').textContent = S.docs.length || '';
+  hero();
+  render();
+}
+
+function hero(){
+  const g=S.grid||{}, c=S.counts;
+  const first=(S.shots||[]).find(s=>s.has_frame);
+  $('#herobg').style.backgroundImage = first ? `url("${media(first.frame_rel||('frames/'+first.id+'.png'))}")` : '';
+  $('#h1').textContent = S.project_name;
+  const sl=S.shotlist||{};
+  $('#sub').textContent = sl.change || S.project_dir;
+  $('#meta').innerHTML = [
+    [S.shots.length, 'кадров в плане', ''],
+    [c.frames, 'снято', ''],
+    [c.clips, 'клипов', ''],
+    [c.accepted, 'принято', 'sig'],
+    [c.rejected, 'брак', c.rejected ? 'rec' : ''],
+    [g.bpm ? Number(g.bpm).toFixed(1) : '—', 'BPM', ''],
+    [g.duration ? tc(g.duration) : '—', 'хронометраж', ''],
+  ].map(([v,l,cls])=>`<div class="${cls}"><b>${esc(v)}</b><span>${esc(l)}</span></div>`).join('');
+}
+
+const HEADS = {
+  overview:'Обзор', pipeline:'Конвейер', board:'Раскадровка', canon:'Канон',
+  material:'Материал', docs:'Документы', money:'Деньги', newclip:'Новый клип',
+};
+
+function render(){
+  const b=$('#body');
+  b.style.animation='none'; void b.offsetWidth; b.style.animation='';
+  if(TAB==='newclip'){ b.innerHTML=newclip(); bindForm(); return; }
+  if(TAB==='pipeline'){
+    b.innerHTML='<p class="hint">читаю фрагменты ролей…</p>';
+    (SNAP?Promise.resolve(SNAP.pipeline||{waves:[]}):fetch('/api/pipeline').then(r=>r.json()))
+      .then(p=>{ b.innerHTML=pipeline(p);
+        b.querySelectorAll('.role').forEach((el,i)=>el.style.animationDelay=(i*20)+'ms'); });
+    return;
+  }
+  if(TAB==='money'){
+    b.innerHTML='<p class="hint">считаю…</p>';
+    (SNAP?Promise.resolve({text:SNAP.money}):fetch('/api/money').then(r=>r.json()))
+      .then(j=>b.innerHTML='<h2 class="sec">бухгалтерия <em>цена принятой секунды, а не генерации — R24</em></h2><pre>'+esc(j.text)+'</pre>');
+    return;
+  }
+  b.innerHTML = {overview,board,canon,material,docs}[TAB]();
+  b.querySelectorAll('.shot,.tile').forEach((el,i)=>el.style.animationDelay=(i*16)+'ms');
+}
+
+function overview(){
+  const next=S.stages.find(s=>!s.done);
+  const track=S.stages.map(s=>{
+    const cls = s.done ? 'done' : (next && s.title===next.title ? 'now' : '');
+    return `<div class="stage ${cls}"><i></i><b>${esc(s.title)}</b><span>${esc(s.agent.replace('clip-',''))}</span></div>`;
+  }).join('');
+  const gates=Object.entries(S.gates).map(([k,v])=>
+    `<span class="chip ${v?'ok':''}">гейт ${esc(k)} ${v?'✓':'—'}</span>`).join('');
+  const b=S.budget||{};
+  return `
+    <h2 class="sec">путь проекта <em>читается с диска, не из памяти чата</em></h2>
+    <div class="track">${track}</div>
+    ${stepCard()}
+    <div class="gatebar">${gates}
+      ${b.verdict?`<span class="chip ${b.verdict==='OK'?'ok':'rec'}">смета ${esc(b.verdict)}</span>`:''}
+      ${b.frames?`<span class="chip blue">${b.frames.credits} кр. · ${b.frames.count} кадров</span>`:''}
+      ${b.motion?`<span class="chip blue">${b.motion.sends} отправок ≈ ${b.motion.quota_pct}% квоты</span>`:''}</div>
+    <h2 class="sec">артефакты</h2>
+    <table><thead><tr><th></th><th>Этап</th><th>Роль</th><th>Файл</th></tr></thead><tbody>
+      ${S.stages.map(s=>`<tr>
+        <td style="width:52px">${s.done?'<span class="chip ok">есть</span>':'<span class="chip amb">нет</span>'}</td>
+        <td><b>${esc(s.title)}</b></td><td class="k">${esc(s.agent)}</td>
+        <td class="k" style="width:auto;color:var(--faint)">${esc(s.path)}</td></tr>`).join('')}
+    </tbody></table>`;
+}
+
+// Панель агентов не запускает — она говорит, какую команду дать и где.
+// Прогон тратит деньги, поэтому начинается с ведома человека, а не по нажатию в браузере.
+function stepCard(){
+  const n=S.next_step||{};
+  if(!n.title) return '';
+  return `<div class="next-card">
+    <b>Дальше: ${esc(n.title)}</b>
+    ${n.command?`<div class="cmd" id="cmdbox">
+        <code>${esc(n.command)}</code>
+        <button class="btn ghost" onclick="copyCmd('${esc(n.command)}')">копировать</button>
+        ${SNAP?'':`<button class="btn ghost" onclick="reveal()">открыть папку</button>`}
+      </div>
+      <div class="hint" style="margin-top:8px">папка: <code>${esc(n.where||'')}</code></div>`:''}
+    <div class="hint" style="margin-top:6px">${esc(n.hint||'')}</div>
+  </div>`;
+}
+async function reveal(){
+  try{ await fetch('/api/reveal',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}); }
+  catch(e){}
+}
+async function copyCmd(t){
+  try{ await navigator.clipboard.writeText(t);
+    const b=document.querySelector('#cmdbox button'); if(b){ b.textContent='скопировано'; setTimeout(()=>b.textContent='копировать',1600);} }
+  catch(e){ /* буфер недоступен — команда всё равно видна и выделяется */ }
+}
+
+const ST_WORD={done:'сделано',attention:'нужны правки',blocker:'блокер',skipped:'пропущено',pending:'ждёт'};
+
+function pipeline(p){
+  const gates=Object.entries(p.gates||{}).map(([k,v])=>
+    `<span class="chip ${v?'ok':''}">гейт ${esc(k)} ${v?'✓':'—'}</span>`).join('');
+  const cols=(p.waves||[]).map(w=>`
+    <div class="col">
+      <div class="col-h"><b>${esc(w.title)}</b><span>${esc(w.subtitle)}</span></div>
+      ${w.roles.map(r=>{
+        const isNext = r.agent===p.next;
+        const cls = r.status==='pending' ? (isNext?'next':'') : r.status;
+        const word = isNext && r.status==='pending' ? 'следующий' : (ST_WORD[r.status]||r.status);
+        return `<div class="role ${cls}">
+          <b>${esc(r.title)}</b><div class="who">${esc(r.agent)}</div>
+          <div class="st">${esc(word)}</div>
+          ${r.note?`<div class="msg">${esc(r.note)}</div>`:''}
+        </div>`;}).join('')}
+    </div>`).join('');
+  return `<div class="gatebar">${gates}</div>
+    <div class="flow">${cols}</div>
+    <p class="hint" style="margin-top:18px">Статус берётся из фрагмента, который роль пишет о себе сама —
+    панель читает тот же файл, что и Директор. Task запускает только он: иначе гейты обходятся снизу.</p>`;
+}
+
+function board(){
+  if(!S.shots.length) return empty('Раскадровки нет','Её пишет роль clip-storyboard: кадры, крупности, движение и длина в долях.');
+  const sl=S.shotlist||{}, secs=S.grid.sections||[];
+  const total=secs.reduce((a,s)=>a+((s.end||0)-(s.start||0)),0)||1;
+  const totalW=S.shots.reduce((a,s)=>a+(s.weight||s.beats||0),0)||1;
+  const secBar=secs.map(s=>`<div class="sec-b" style="flex:0 0 ${((s.end-s.start)/total*100).toFixed(2)}%"
+      title="${esc(s.name)} · ${tc(s.start)}–${tc(s.end)}">${esc(s.name)}</div>`).join('');
+  const strip=S.shots.map(s=>{
+    const cls=s.verdict==='reject'?'rej':s.has_clip?'clip':s.has_frame?'frame':'';
+    return `<div class="sh ${cls}" style="flex:0 0 ${((s.weight||s.beats||0)/totalW*100).toFixed(2)}%"
+      title="${esc(s.id)} · ${esc(s.len_label||'')}" onclick="openShot('${esc(s.id)}')"></div>`;}).join('');
+  const order=[...new Set(S.shots.map(s=>s.section))];
+  const blocks=order.map(name=>{
+    const list=S.shots.filter(s=>s.section===name);
+    const bt=list.reduce((a,s)=>a+(s.weight||s.beats||0),0);
+    return `<h2 class="sec">${esc(name||'без раздела')}
+        <em>${list.length} кадров · ${S.legacy? bt.toFixed(0)+' с' : beatsWord(bt)}</em></h2>
+      <div class="cards" style="margin-bottom:30px">${list.map(card).join('')}</div>`;
+  }).join('');
+  return `<div class="reel"><div class="perf"></div>
+      ${secBar?`<div class="sections">${secBar}</div>`:''}
+      <div class="strip">${strip}</div>
+      <div class="ruler"><span>00:00</span>
+        <span>${esc(sl.form||'')}${sl.lyric_relation?' · '+esc(sl.lyric_relation):''}</span>
+        <span>${tc(S.grid.duration)}</span></div></div>
+    ${blocks}`;
+}
+
+function card(s){
+  const dot = s.verdict==='accept'?'ok':s.verdict==='reject'?'rec':'wait';
+  const thumb = s.has_frame ? `<img loading="lazy" src="${media(s.frame_rel||('frames/'+s.id+'.png'))}" alt="">`
+                            : `<span class="empty">кадр не снят</span>`;
+  return `<div class="shot" onclick="openShot('${esc(s.id)}')">
+    <div class="frameimg">${thumb}<span class="dot ${dot}"></span>
+      <div class="slate"><span class="sid">${esc(s.id)}</span>
+        <span class="len">${esc(s.len_label||'')}</span></div></div>
+    <div class="info">
+      ${s.size?`<div class="spec"><b>${esc(s.size)}</b><span>${esc(s.angle||'')}</span><span>${esc(s.movement||'')}</span></div>`:''}
+      ${s.note?`<div class="why">${esc(s.note)}</div>`:s.content?`<div class="why">${esc(s.content)}</div>`:''}
+      <div class="chips">
+        ${(s.anchors||[]).map(a=>`<span class="chip">${esc(a)}</span>`).join('')}
+        ${s.has_clip?'<span class="chip ok">видео</span>':''}
+        ${s.has_v2?'<span class="chip blue">дубль</span>':''}
+        ${s.verdict==='reject'?'<span class="chip rec">брак</span>':''}</div>
+    </div></div>`;
+}
+
+function openShot(id){
+  const s=S.shots.find(x=>x.id===id); if(!s) return;
+  $('#dlg-t').textContent=`${s.id} · ${s.section||''} · ${s.len_label||''}`;
+  const m = s.has_clip ? `<video controls src="${media(s.clip_rel||('clips/'+s.id+'.mp4'))}"></video>`
+          : s.has_frame ? `<img src="${media(s.frame_rel||('frames/'+s.id+'.png'))}">` : '';
+  const row=(k,v)=>v?`<tr><td class="k">${k}</td><td>${esc(v)}</td></tr>`:'';
+  $('#dlg-c').innerHTML=`${m}<table style="margin-top:18px"><tbody>
+      ${row('крупность',s.size)}${row('ракурс',s.angle)}${row('движение',s.movement)}
+      ${row('якоря',(s.anchors||[]).join(', '))}${row('содержание',s.content)}
+      ${row('свет',s.light)}${row('зачем кадр',s.note)}
+      ${row('промпт кадра',s.prompt)}${row('промпт движения',s.motion_prompt)}
+    </tbody></table>`;
+  $('#dlg').showModal();
+}
+
+function canon(){
+  const cam=S.camera||{};
+  const cards=(S.anchors||[]).map(a=>{
+    const url=S.canon_refs[a.name];
+    return `<div class="shot">
+      <div class="frameimg">${url?`<img loading="lazy" src="${esc(url)}" alt="">`:'<span class="empty">якорь не снят</span>'}
+        <div class="slate"><span class="sid" style="font-size:14px">${esc(a.name)}</span>
+          ${url?'<span class="len">готов</span>':''}</div></div>
+      <div class="info"><div class="why" style="-webkit-line-clamp:3">${esc(a.what||'')}</div>
+        <div class="chips">${(a.holds||[]).map(h=>`<span class="chip ok">${esc(h)}</span>`).join('')}
+          ${(a.does_not_hold||[]).map(h=>`<span class="chip amb">${esc(h)}</span>`).join('')}</div>
+      </div></div>`;}).join('');
+  const refs=Object.entries(S.canon_refs||{}).filter(([n])=>!(S.anchors||[]).some(a=>a.name===n))
+    .map(([n,url])=>`<div class="shot"><div class="frameimg">
+        <img loading="lazy" src="${esc(url)}" alt=""><div class="slate">
+        <span class="sid" style="font-size:14px">${esc(n)}</span><span class="len">готов</span></div>
+      </div></div>`).join('');
+  const rows=[
+    cam.optics?['оптика',(cam.optics.lenses||[]).join(' · ')+(cam.optics.dof?' — '+cam.optics.dof:'')]:null,
+    cam.stock?['плёнка',cam.stock]:null,
+    cam.palette?['палитра',(cam.palette||[]).join(' · ')]:null,
+    cam.vocabulary?['словарь',(cam.vocabulary.sizes||[]).join(' · ')+' / '+(cam.vocabulary.moves||[]).join(' · ')]:null,
+    ...Object.entries(cam.light_by_section||{}),
+    (cam.risks||[]).length?['риски',(cam.risks||[]).join(' · ')]:null,
+  ].filter(Boolean).map(([k,v])=>`<tr><td class="k">${esc(k)}</td><td>${esc(v)}</td></tr>`).join('');
+  const all=cards+refs;
+  return `${all?`<h2 class="sec">якоря <em>что обязано совпадать во всех сценах</em></h2>
+      <div class="cards" style="margin-bottom:30px">${all}</div>`
+    :empty('Якорей нет','Их задаёт художник-постановщик, снимает роль clip-anchors.')}
+    ${rows?`<h2 class="sec">камера <em>то, чего якорь не держит</em></h2><table><tbody>${rows}</tbody></table>`:''}`;
+}
+
+function material(){
+  const list=S.shots.filter(s=>s.has_clip);
+  if(!list.length) return empty('Материала нет','Снятые клипы появятся после партии съёмки.');
+  return `<h2 class="sec">снято <em>смотреть целиком, а не по стоп-кадрам — R16</em></h2>
+    <div class="cards">${list.map(s=>`
+    <div class="shot">
+      <div class="frameimg"><video preload="metadata" controls src="${media(s.clip_rel||('clips/'+s.id+'.mp4'))}"></video>
+        <span class="dot ${s.verdict==='accept'?'ok':s.verdict==='reject'?'rec':'wait'}"></span></div>
+      <div class="info">
+        <div class="spec"><b>${esc(s.id)}</b><span>${esc(s.size||'')}</span><span>${esc(s.movement||'')}</span></div>
+        <div class="chips">
+          ${s.verdict==='accept'?'<span class="chip ok">принят</span>':s.verdict==='reject'?'<span class="chip rec">брак</span>':'<span class="chip amb">без вердикта</span>'}
+          ${s.has_v2?'<span class="chip blue">есть дубль</span>':''}</div>
+        ${s.has_v2?`<video preload="metadata" controls style="width:100%;margin-top:11px;border-radius:8px;border:1px solid var(--line)"
+           src="${media(s.v2_rel||('clips/'+s.id+'_v2.mp4'))}"></video>`:''}
+      </div></div>`).join('')}</div>`;
+}
+
+function docs(){
+  if(!S.docs.length) return empty('Документов нет','Здесь появятся досье, тритмент, экспликация и питч.');
+  return `<div class="tiles">${S.docs.map(d=>
+    `<div class="tile" onclick="openDoc('${esc(d.rel)}','${esc(d.title)}')">
+       <b>${esc(d.title)}</b><span>${esc(d.rel)}</span></div>`).join('')}</div>`;
+}
+
+async function openDoc(rel,title){
+  const j = SNAP ? {text:(SNAP.docs||{})[rel]||'(в снимке текст не сохранён)'}
+                 : await (await fetch('/api/doc?rel='+encodeURIComponent(rel))).json();
+  $('#dlg-t').textContent=title;
+  $('#dlg-c').innerHTML='<div class="doc">'+md(j.text||'')+'</div>';
+  $('#dlg').showModal();
+}
+
+const empty=(t,s)=>`<div class="empty-state"><b>${esc(t)}</b>${esc(s)}</div>`;
+
+/* ── новый клип ─────────────────────────────────────────────────────────── */
+const doneCard = j => j.error ? `<div class="done-card">${esc(j.error)}</div>` : `
+  <div class="done-card"><b>Проект заведён: ${esc(j.name)}</b>
+    <div class="hint" style="margin-top:6px">${esc(j.dir)}</div>
+    <code>${esc(j.command)}</code>
+    <div class="hint">${esc(j.hint)}</div>
+    <button class="btn ghost" style="margin-top:14px" onclick="TAB='pipeline';render()">Показать конвейер</button>
+  </div>`;
+
+function newclip(){
+  const v=k=>esc(FORM[k]||'');
+  return `<div class="form">
+    <p class="hint" style="margin:0 0 22px">Панель готовит вход: заводит папку латиницей, создаёт память
+    проекта и записывает бриф. Работу ведут роли — их запускает Claude Code командой, которую панель выдаст.
+    Отсюда ничего не генерируется и не тратится.</p>
+    <div class="field"><label>Название клипа</label>
+      <input id="f-title" value="${v('title')}" placeholder="Рубка связи">
+      <div class="tip">Папка получит латинское имя: «Рубка связи» → <code>rubka-svyazi</code> (R25).</div></div>
+    <div class="field"><label>О чём клип</label>
+      <textarea id="f-theme" rows="5" placeholder="Тема, настроение, что должно остаться у зрителя. Своими словами — ресёрчер и сценарист разберутся дальше.">${v('theme')}</textarea></div>
+    <div class="field"><label>Трек</label>
+      <input id="f-track" value="${v('track')}" placeholder="D:\\Music\\song.mp3 — или название, если файла ещё нет">
+      <div class="tip">С него снимут сетку долей, разделы и пословные тайминги: монтаж строится от такта.</div></div>
+    <div class="field"><label>Ограничения</label>
+      <input id="f-limits" value="${v('limits')}" placeholder="потолок кредитов, сроки, чего точно не делать"></div>
+    <div class="field"><label>Референсы</label>
+      <input id="f-refs" value="${v('refs')}" placeholder="ссылки на клипы или фильмы, попадающие в тон"></div>
+    <button class="btn" onclick="submitNew()">Завести проект</button>
+    <div id="newresult">${LAST_NEW?doneCard(LAST_NEW):''}</div>
+  </div>`;
+}
+
+function bindForm(){
+  [['title','#f-title'],['theme','#f-theme'],['track','#f-track'],
+   ['limits','#f-limits'],['refs','#f-refs']].forEach(([k,sel])=>{
+    const el=$(sel); if(!el) return;
+    el.oninput = () => { FORM[k] = el.value; };
+  });
+  $('#f-title') && $('#f-title').focus();
+}
+
+async function submitNew(){
+  const body={title:(FORM.title||'').trim(), theme:FORM.theme||'', track:FORM.track||'',
+              limits:FORM.limits||'', refs:FORM.refs||''};
+  if(!body.title){ $('#f-title').focus(); return; }
+  const r=await fetch('/api/new',{method:'POST',headers:{'Content-Type':'application/json'},
+                                 body:JSON.stringify(body)});
+  const j=await r.json();
+  LAST_NEW=j;
+  $('#newresult').innerHTML=doneCard(j);
+  if(!j.error){ Object.keys(FORM).forEach(k=>delete FORM[k]); loadHeadOnly(); }
+}
+
+async function loadHeadOnly(){
+  S = await (await fetch('/api/state')).json();
+  $('#proj').textContent=S.project_name; hero();
+}
+
+/* ── выбор проекта ──────────────────────────────────────────────────────── */
+async function openProjects(){
+  const box=$('#projlist');
+  if(!box.hidden){ box.hidden=true; return; }
+  const j=await (await fetch('/api/projects')).json();
+  box.innerHTML=(j.projects||[]).map(p=>
+    `<div class="${p.current?'cur':''}" data-dir="${esc(p.dir)}">
+       <b>${esc(p.name)}</b><span>${esc(p.about)}</span></div>`).join('')
+    + `<div data-new="1"><b>＋ Новый клип</b><span>завести папку и бриф</span></div>`;
+  box.querySelectorAll('div').forEach(el=>el.onclick=async()=>{
+    box.hidden=true;
+    if(el.dataset.new){ TAB='newclip'; setActive('newclip'); render(); return; }
+    await fetch('/api/select',{method:'POST',headers:{'Content-Type':'application/json'},
+                               body:JSON.stringify({dir:el.dataset.dir})});
+    await load();
+  });
+  box.hidden=false;
+}
+
+function setActive(tab){
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x.dataset.t===tab));
+}
+
+if(!SNAP) $('#projbtn').onclick = openProjects;
+else $('#projbtn').style.pointerEvents='none';
+
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  TAB=b.dataset.t; setActive(TAB); render();
+});
+load();
+if(!SNAP) setInterval(()=>load({auto:true}), 20000);
+</script>
+</body>
+</html>

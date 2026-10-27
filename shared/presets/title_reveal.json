@@ -1,0 +1,67 @@
+{
+ "_comment": "R34. Пресет «Надпись проявляется полосой света». Источник: ANNOTATION_video_prompts_ru.md (26.09.2026): переход в белое, дебосс виден тенью, за полосой рельеф заливается чернилами, написание по буквам. Вариант C (без надписи, титр в монтаже) строится автоматически.",
+ "id": "title_reveal",
+ "vars": {
+  "text": {
+   "type": "str",
+   "required": true,
+   "help_ru": "надпись ровно как в кадре: 'Название песни'. По буквам раскладывает сборщик"
+  },
+  "ink": {
+   "type": "str",
+   "required": true,
+   "help_ru": "цвет заливки: 'warm brass', 'deep black'"
+  },
+  "surface": {
+   "type": "str",
+   "required": true,
+   "help_ru": "микротекстура белой поверхности, связанная с миром клипа"
+  },
+  "from_white": {
+   "type": "str",
+   "required": false,
+   "help_ru": "что растворяется в белом в начале плана; нет — план начинается уже на белой поверхности"
+  },
+  "no_text": {
+   "type": "bool",
+   "required": false,
+   "default": false,
+   "help_ru": "вариант C: поверхность без букв, титр накладывает монтажёр"
+  },
+  "hold_end": {
+   "type": "bool",
+   "required": false,
+   "default": true,
+   "help_ru": "полная статика последние 0,5 с"
+  }
+ },
+ "split": 0.3,
+ "split_if": "from_white",
+ "parts": [
+  {
+   "if": "from_white",
+   "text": "{t0}-{t1} s: light slowly grows from behind {from_white}, never a flash, until the whole frame is overexposed to pure white and {from_white} dissolves into it; the camera keeps a faint drift and never stops."
+  },
+  {
+   "text": "The white is a physical white surface with a fine micro-texture of {surface}. A warm raking band of light slides across it from left to right."
+  },
+  {
+   "if_not": "no_text",
+   "text": "Ahead of the band the lettering exists only as a deep debossed relief, seen as shadow and a pale highlight: {text_q}, spelled exactly letter by letter: {spelled}; no other words, no symbols, no logos. Behind the band the relief fills with crisp matte {ink} ink."
+  },
+  {
+   "if": "no_text",
+   "text": "The surface stays blank: no letters, no words, no symbols at any moment."
+  },
+  {
+   "if": "hold_end",
+   "text": "The band leaves the frame and the camera holds completely still for the last half second."
+  }
+ ],
+ "fallback_auto": {
+  "C": {
+   "_why_ru": "вариант C аннотации: модель путает буквы — надпись накладывается в монтаже",
+   "no_text": true
+  }
+ }
+}
