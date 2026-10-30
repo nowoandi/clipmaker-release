@@ -692,20 +692,205 @@ def preflight_checks():
             case("6 сцен без --only — больше batch_max, стоп (R11)", api, 2, "6 > 5")
             case("--planned не равен выборке — стоп", api + ["--only", "S01,S02", "--planned", "3"], 2,
                  "--planned 3")
-            case("цена только cost_hint — летим, но с предупреждением",
+            # Модели нет в motion_prices: иначе цену дала бы таблица, а не cost_hint.
+            nomodel = {"prices": {}, "motion": {"model": "unknown/model", "ceiling_credits": 198.0}}
+            case("цена только cost_hint (модели нет в таблице) — летим, но с предупреждением",
                  api + ["--only", "S01"], 0, "cost_hint — цена ролика",
-                 video={"cost_hint": 27}, budget={"prices": {}}, marker={"batch_credits": 27.0})
-            case("нет цены вовсе — стоп", api + ["--only", "S01"], 2, "цена ролика неизвестна",
-                 budget={"prices": {}})
+                 video={"cost_hint": 27, "model": "unknown/model"}, budget=nomodel,
+                 marker={"batch_credits": 27.0})
+            case("нет цены вовсе (модели нет в таблице) — стоп", api + ["--only", "S01"], 2,
+                 "цена ролика неизвестна", video={"model": "unknown/model"}, budget=nomodel)
             case("мост по video.provider проекта — как прежде, маркер provider bridge",
                  ["--planned", "4"], 0, "отправок режима", marker={"provider": "bridge", "planned": 4})
             case("--only у моста — стоп: партию моста задаёт --planned", ["--only", "S01"], 2, "--planned")
+            # 29.10.2026: бесплатный мост Grok кончился. Умолчание — Kie, цена — из motion_prices.
+            case("умолчание 29.10.2026: ни флага, ни video.provider — ветка Kie, не мост",
+                 ["--only", "S01"], 0, video={"provider": None}, marker={"provider": "api"})
+            case("умолчание: без провайдера --planned моста не годится — партию Kie задаёт --only",
+                 ["--planned", "4"], 2, "--planned 4", video={"provider": None})
+            case("цена из таблицы: проект и смета её не дают — Grok 6 с = 27 кр. по motion_prices",
+                 api + ["--only", "S01"], 0, "motion_prices", budget={"prices": {}},
+                 marker={"credits_per_clip": 27.0, "batch_credits": 27.0})
+            veo_budget = {"prices": {}, "motion": {"model": "veo3_lite", "ceiling_credits": 198.0}}
+            case("Veo 3.1 Lite 8 с — ролик 30 кр. по таблице (цена ролика, не секунды)",
+                 api + ["--only", "S01"], 0, "motion_prices", video={"model": "veo3_lite", "duration": 8},
+                 budget=veo_budget, marker={"credits_per_clip": 30.0, "batch_credits": 30.0, "model": "veo3_lite"})
+            case("доллары на экране: партия Veo Lite 30 кр. ≈ $0.15",
+                 api + ["--only", "S01"], 0, "≈ $0.15", video={"model": "veo3_lite", "duration": 8},
+                 budget=veo_budget)
+            case("Veo Lite на 6 с — стоп: у модели цена задана только для 8 с",
+                 api + ["--only", "S01"], 2, "длительностей 8 с", video={"model": "veo3_lite", "duration": 6},
+                 budget=veo_budget)
+            case("смета считает 3,0 кр./с, таблица 4,5 — ВНИМАНИЕ о расхождении, летим по смете",
+                 api + ["--only", "S01"], 0, "расходится с таблицей",
+                 budget={"motion": {"model": "grok-imagine/image-to-video", "ceiling_credits": 198.0,
+                                    "credits_per_sec": 3.0}},
+                 marker={"credits_per_clip": 18.0})
         finally:
             for k, x in env_old.items():
                 if x is None:
                     os.environ.pop(k, None)
                 else:
                     os.environ[k] = x
+    return results
+
+
+# --- смета движения: цена из таблицы, не из головы (29.10.2026) ----------------------------------
+# Бесплатный мост Grok кончился, движение стало платным, а Grok в Kie подорожал с 18 до 27 кр. за
+# ролик 6 с. Смета с одним дублем занижала расход (в октябре на сцену ушло 1,94 съёмки): цену и
+# дубли теперь считает код (motion_prices.py, motion_cost.py), роль только вставляет напечатанное.
+def motion_cost_checks():
+    import contextlib
+    import io
+    import motion_cost
+    import motion_prices as mp
+
+    results = []
+
+    def rec(desc, ok, detail=""):
+        results.append((desc, ok, detail))
+
+    cfg = lib.load_config()
+
+    def est(model, dur, scenes, takes=None):
+        try:
+            return motion_cost.estimate(cfg, model, dur, scenes, takes), ""
+        except mp.NoPrice as e:
+            return None, str(e)
+
+    grok = "grok-imagine/image-to-video"
+    r, _ = est(grok, 6, 10, 1.0)
+    rec("Grok 6 с: ролик 27 кр., 10 сцен одним дублем = 270 кр. = $1,35",
+        bool(r) and r["credits_per_clip"] == 27.0 and r["credits_one_take"] == 270.0
+        and r["usd_one_take"] == 1.35 and r["credits_per_sec"] == 4.5, str(r))
+    r, _ = est(grok, 6, 10, 1.94)
+    rec("Grok 6 с, 10 сцен × 1,94 съёмки = 523,8 кр., потолок 524, $2,62",
+        bool(r) and r["credits_with_takes"] == 523.8 and r["ceiling_credits"] == 524
+        and r["usd_with_takes"] == 2.62, str(r))
+    r, _ = est(grok, 6, 10)
+    rec("дубли по умолчанию — video_takes_factor из конфига (1,94 по книге октября)",
+        bool(r) and r["takes_factor"] == mp.takes_factor(cfg) == 1.94 and r["ceiling_credits"] == 524, str(r))
+    r, _ = est(grok, 10, 1, 1.0)
+    rec("Grok 10 с = 45 кр. (книга: 45 кр. за ролик 10 с)", bool(r) and r["credits_per_clip"] == 45.0, str(r))
+    r, _ = est("veo3_lite", 8, 3, 1.0)
+    rec("Veo 3.1 Lite 8 с — цена ролика 30 кр., цены секунды нет, статус «замер»",
+        bool(r) and r["credits_per_clip"] == 30.0 and r["credits_per_sec"] is None and r["price_status"] == "замер",
+        str(r))
+    r, err = est("veo3_lite", 6, 3, 1.0)
+    rec("Veo Lite на 6 с — стоп: цена задана только для 8 с", r is None and "8 с" in err, err)
+    r, _ = est("google/gemini-omni-flash-1-1", 6, 1, 1.0)
+    rec("Omni 6 с = 84 кр., статус «страница» (с прайса, не замерено)",
+        bool(r) and r["credits_per_clip"] == 84.0 and r["price_status"] == "страница", str(r))
+    r, err = est("seedance-1.5-pro", 6, 1, 1.0)
+    rec("модели нет в таблице (Seedance сегодня не подтверждён) — стоп, а не догадка",
+        r is None and "нет в motion_prices" in err, err)
+
+    def cli(*argv):
+        buf, code = io.StringIO(), 0
+        old = sys.argv
+        sys.argv = ["motion_cost.py", *argv]
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                motion_cost.main()
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else 2
+        finally:
+            sys.argv = old
+        return code, buf.getvalue()
+
+    code, out = cli("--model", grok, "--duration", "6", "--scenes", "10", "--takes", "1.94", "--json")
+    try:
+        block = json.loads(out)
+    except ValueError:
+        block = {}
+    rec("--json печатает блок для budget.json → motion: потолок 524, цена секунды 4,5",
+        code == 0 and block.get("ceiling_credits") == 524 and block.get("credits_per_sec") == 4.5
+        and block.get("price_status") == "замер", out)
+    code, out = cli("--model", "veo3_lite", "--duration", "8", "--scenes", "2", "--takes", "1")
+    rec("Veo Lite на экране: $0,30 за два ролика и ВНИМАНИЕ про прайс не нужно (статус «замер»)",
+        code == 0 and "$0.3" in out and "ВНИМАНИЕ" not in out, out)
+    code, out = cli("--model", "google/gemini-omni-flash-1-1", "--duration", "6", "--scenes", "1", "--takes", "1")
+    rec("цена с прайса — на экране ВНИМАНИЕ: заявлено, проверяется пилотом (R23)",
+        code == 0 and "ВНИМАНИЕ" in out and "R23" in out, out)
+    code, out = cli("--model", "veo3_lite", "--duration", "6", "--scenes", "1")
+    rec("нет цены на экране — код 2", code == 2 and "8 с" in out, out)
+    return results
+
+
+# --- книга расходов: цена принятой секунды движения (29.10.2026) ---------------------------------
+# Сырая секунда Grok в Kie — $0,0225, принятая в октябре — $0,051: брак (1,94 съёмки на сцену)
+# удваивает цену. Пока он не посчитан в деньгах, экономика врёт в свою пользу (R24).
+def ledger_checks():
+    import contextlib
+    import io
+    import os
+    import clip_ledger
+
+    results = []
+
+    def rec(desc, ok, detail=""):
+        results.append((desc, ok, detail))
+
+    def run(*argv):
+        buf, code = io.StringIO(), 0
+        old_argv, old_bal = sys.argv, clip_ledger.kie_balance
+        clip_ledger.kie_balance = lambda cfg: (None, "selbsttest: без сети")
+        sys.argv = ["clip_ledger.py", *argv]
+        try:
+            with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
+                clip_ledger.main()
+        except SystemExit as e:
+            code = e.code if isinstance(e.code, int) else 2
+        finally:
+            sys.argv, clip_ledger.kie_balance = old_argv, old_bal
+        return code, buf.getvalue()
+
+    g = "grok-imagine/image-to-video"
+    env_old = os.environ.get("LOCALAPPDATA")
+    with tempfile.TemporaryDirectory() as t:
+        root = Path(t)
+        os.environ["LOCALAPPDATA"] = str(root / "appdata")
+        try:
+            def mkproject(name, accepted, rejected):
+                pdir = root / name
+                lib.write_json(pdir / "project.json",
+                               {"project": name, "video": {"model": g, "duration": 6}, "scenes": []})
+                lib.write_json(lib.verdicts_path(pdir),
+                               [{"verdict": "accept"}] * accepted + [{"verdict": "reject"}] * rejected)
+                return pdir
+
+            pdir = mkproject("pL", 3, 3)
+            code, out = run("record", "--project", "pL", "--stage", "shoot", "--before", "1000",
+                            "--after", "892", "--items", "4", "--model", g, "--seconds", "6")
+            ev = clip_ledger.load_events()
+            rec("record с --model и --seconds: поля в книге; 108 кр. на 4 ролика по 6 с = 4,50 кр./с",
+                code == 0 and bool(ev) and ev[-1].get("model") == g and ev[-1].get("clip_seconds") == 6.0
+                and ev[-1].get("kie_spent") == 108.0 and "4.50 кр./с" in out, out)
+            run("record", "--project", "pL", "--stage", "shoot", "--before", "892", "--after", "838",
+                "--items", "2", "--model", g, "--seconds", "6")
+            code, out = run("report", "--project", "pL", "--project-dir", str(pdir))
+            rec("report: цена принятой секунды движения = 162 кр. / (3 принятых × 6 с) = 9,00 кр./с = $0,045",
+                code == 0 and "9.00 кр./с = $0.045" in out and "3 клипов по 6 с" in out, out)
+            rec("report: сырая секунда по модели отдельно — 4,50 кр./с = $0,0225 (дрейф прайса виден)",
+                "4.50 кр./с = $0.0225/с" in out, out)
+
+            pdir2 = mkproject("pM", 0, 2)
+            run("record", "--project", "pM", "--stage", "shoot", "--before", "838", "--after", "784",
+                "--items", "2", "--model", g, "--seconds", "6")
+            code, out = run("report", "--project", "pM", "--project-dir", str(pdir2))
+            rec("report: принятых нет — «принятых клипов нет», а не деление на ноль",
+                code == 0 and "принятых клипов нет" in out and "54 кр." in out, out)
+
+            pdir3 = mkproject("pN", 2, 0)
+            run("record", "--project", "pN", "--stage", "anchors", "--before", "500", "--after", "470", "--items", "5")
+            code, out = run("report", "--project", "pN", "--project-dir", str(pdir3))
+            rec("report: видео Kie не тратилось (только якоря) — строки про принятую секунду движения нет",
+                code == 0 and "цена принятой секунды движения" not in out, out)
+        finally:
+            if env_old is None:
+                os.environ.pop("LOCALAPPDATA", None)
+            else:
+                os.environ["LOCALAPPDATA"] = env_old
     return results
 
 
@@ -1455,6 +1640,20 @@ def main():
     print("\n── gate_preflight: мост Grok против Kie API ──")
     preflight_results = preflight_checks()
     for desc, ok, detail in preflight_results:
+        errors += not ok
+        print(f"{'ok  ' if ok else 'FALSCH'} {desc}")
+        if not ok and detail:
+            print("      вывод:", detail.strip()[-400:].replace("\n", " | "))
+
+    print("\n── смета движения: цена из таблицы, дубли из конфига ──")
+    for desc, ok, detail in motion_cost_checks():
+        errors += not ok
+        print(f"{'ok  ' if ok else 'FALSCH'} {desc}")
+        if not ok and detail:
+            print("      вывод:", detail.strip()[-400:].replace("\n", " | "))
+
+    print("\n── книга расходов: цена принятой секунды движения ──")
+    for desc, ok, detail in ledger_checks():
         errors += not ok
         print(f"{'ok  ' if ok else 'FALSCH'} {desc}")
         if not ok and detail:

@@ -27,8 +27,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import clip_lib as lib
+import motion_prices
 
 KIE_CREDIT_URL = "https://api.kie.ai/api/v1/chat/credit"
+# Этапы книги, на которых платится видео Kie. Зеркало KIE_VIDEO_STAGES в gate_preflight.py:
+# правим обе или ни одной.
+KIE_VIDEO_STAGES = {"shoot", "video", "motion", "video_kie"}
 ENV_CANDIDATES = []  # ключ ищется в .env рядом с pipeline или в kie_env_file из config
 
 def ledger_path():
@@ -174,16 +178,42 @@ def cmd_record(args, cfg):
     append({"kind": "spend", "project": args.project or "", "stage": args.stage,
             "items": args.items, "kie_before": args.before, "kie_after": args.after,
             "kie_spent": spent, "grok_sends": args.sends,
-            "grok_mode": mode_key if args.sends else None, "note": args.note or ""})
+            "grok_mode": mode_key if args.sends else None,
+            "model": args.model, "clip_seconds": args.seconds, "note": args.note or ""})
     parts = [f"записано: {args.stage}"]
     if spent is not None:
         parts.append(f"{spent} кр. Kie на {args.items or '?'} шт.")
         if args.items:
             parts.append(f"({spent / args.items:.1f} кр./шт.)")
+        if args.model and args.items and args.seconds:
+            parts.append(f"{spent / (args.items * args.seconds):.2f} кр./с, {args.model}")
     if args.sends:
         parts.append(f"{args.sends} отправок Grok, режим {mode_key} "
                      f"(~{args.sends * price(args.send_mode):.1f}% квоты)")
     print(" · ".join(parts))
+
+def motion_accepted_line(cfg, d, y, project_dir):
+    """R24 для движения: кредиты Kie на видео, делённые на секунды ПРИНЯТЫХ клипов.
+
+    29.10.2026: Grok в Kie подорожал на 50%, а сырая секунда ($0,0225) втрое дешевле принятой
+    ($0,051 при браке октября) — пока брак не посчитан в деньгах, экономика врёт в свою пользу.
+    Секунды принятого = принятые клипы × video.duration проекта; мост Kie-кредитов не тратит.
+    """
+    video_kie = sum(v for k, v in d["stages"].items() if k in KIE_VIDEO_STAGES)
+    if not video_kie:
+        return None
+    try:
+        project = lib.read_json(lib.find_project_json(project_dir))
+        duration = float((project.get("video") or {}).get("duration") or 6)
+    except (Exception, SystemExit):
+        return "    цена принятой секунды движения: не посчитать — в папке проекта нет project.json"
+    if not y["accepted"]:
+        return (f"    цена принятой секунды движения: принятых клипов нет, {video_kie:.0f} кр. Kie "
+                f"на видео пока без результата")
+    seconds = y["accepted"] * duration
+    per = video_kie / seconds
+    return (f"    цена принятой секунды движения: {per:.2f} кр./с = ${per * motion_prices.usd_per_credit(cfg):.3f} "
+            f"({video_kie:.0f} кр. Kie на видео / {seconds:.0f} с принятых: {y['accepted']} клипов по {duration:g} с)")
 
 def cmd_report(args, cfg):
     events = load_events()
@@ -230,6 +260,23 @@ def cmd_report(args, cfg):
             if y["accepted"] + y["rejected"]:
                 waste = y["rejected"] / (y["accepted"] + y["rejected"])
                 print(f"    доля брака: {waste * 100:.0f}% — эти деньги оплачены и выброшены")
+            line = motion_accepted_line(cfg, d, y, args.project_dir or ".")
+            if line:
+                print(line)
+
+    # Цена сырой секунды по моделям — по партиям, записанным с --model и --seconds. Видно дрейф
+    # прайса: между июлем и октябрём 2026 Grok в Kie вырос с 3 до 4,5 кр./с.
+    models = {}
+    for e in spends:
+        if e.get("model") and e.get("clip_seconds") and e.get("items") and e.get("kie_spent"):
+            m = models.setdefault(e["model"], [0.0, 0.0])
+            m[0] += float(e["kie_spent"])
+            m[1] += float(e["items"]) * float(e["clip_seconds"])
+    if models:
+        print("\n  движение по моделям (сырая секунда, по записанным партиям):")
+        for name, (cr, sec) in sorted(models.items()):
+            print(f"    {name}: {cr / sec:.2f} кр./с = ${cr / sec * motion_prices.usd_per_credit(cfg):.4f}/с "
+                  f"({cr:.0f} кр. на {sec:.0f} с)")
 
     print(f"\n  ИТОГО: {total_kie:.0f} кр. Kie · {total_sends} отправок Grok ≈ {total_pct:.0f}% квоты")
     bal, err = kie_balance(cfg)
@@ -254,6 +301,9 @@ def main():
     r.add_argument("--sends", type=int, default=None, help="отправок в Grok")
     r.add_argument("--send-mode", default="video",
                    help="режим этих отправок: video | bild | agent (цены — config/paths.json)")
+    r.add_argument("--model", default=None,
+                   help="модель видео Kie партии (grok-imagine/image-to-video, veo3_lite…): для цены секунды по моделям")
+    r.add_argument("--seconds", type=float, default=None, help="секунд в одном ролике партии")
     r.add_argument("--note", default=None)
 
     p = sub.add_parser("report", help="сводка расходов и единичная экономика")

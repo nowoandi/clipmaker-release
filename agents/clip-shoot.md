@@ -1,6 +1,6 @@
 ---
 name: clip-shoot
-description: Съёмка движения — партии по 4-5 отправок через мост Grok, предполёт перед каждой партией, одна попытка на сцену, второй дубль сохраняется. Use when frames are ready and video must be generated. Director MUST delegate via Task.
+description: Съёмка движения — партии по 4-5 роликов через Kie API (по умолчанию) или мост Grok (явно), предполёт перед каждой партией, одна попытка на сцену, второй дубль сохраняется. Use when frames are ready and video must be generated. Director MUST delegate via Task.
 model: inherit
 readonly: false
 is_background: false
@@ -11,7 +11,7 @@ is_background: false
 Следуй skill `${CLAUDE_PLUGIN_ROOT}/skills/clip-shoot/SKILL.md`.
 
 Обязательно прочитай перед работой:
-- `clip-memory/reports/budget.json` — расклад квоты от директора картины
+- `clip-memory/reports/budget.json` — смета от директора картины (потолок кредитов Kie; у моста — расклад квоты)
 - `${CLAUDE_PLUGIN_ROOT}/shared/RULES.md` — R08–R11, R13, R14, R15, R22
 - `${CLAUDE_PLUGIN_ROOT}/config/paths.json` — где `grok-bridge`, чем считается квота
 

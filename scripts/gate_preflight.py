@@ -14,7 +14,10 @@
 # 03.10.2026 все считались по 2%, и смета связок Agent врала в 3,5 раза вниз.
 #
 # --provider — через что пойдёт партия: мост Grok (квота) или Kie API (кредиты).
-# По умолчанию — project.json → video.provider, без него — мост. 12.10.2026
+# По умолчанию — project.json → video.provider, без него — default_video_provider из
+# config/paths.json. С 29.10.2026 это api: бесплатный Grok через мост кончился (слова Админа
+# 29.10.2026), раньше умолчанием был мост. Цена движения Kie берётся из motion_prices
+# (config/paths.json), если её не задали проект и смета. 12.10.2026
 # в <проект> видео шло через Kie (video.js --provider api), а
 # предполёт считал квоту моста, объявил «НЕ ВЛЕЗАЕМ» и маркера не дал; его
 # перекрыли --force-estimate. Деньги Kie при этом не держал ни один код —
@@ -31,6 +34,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import clip_lib as lib
 import clip_ledger
+import motion_prices
 
 def human_ms(ms):
     h = int(ms // 3600000)
@@ -74,13 +78,14 @@ def kie_selection(project, only, block):
         return picked, []
     return [sid for sid in picked if sid in only], [sid for sid in only if sid not in picked]
 
-def kie_price_per_sec(video, budget):
+def kie_price_per_sec(video, budget, table=None):
     """(кредитов за секунду или None, кредитов за ролик или None, откуда взято).
 
     Цена за секунду — главная: video.js берёт одну длительность на запуск
-    (video.duration), и цена ролика меняется вместе с ней. cost_hint — цена
-    РОЛИКА, так её печатает video.js; при смене duration она врёт молча, поэтому
-    идёт последней и с предупреждением.
+    (video.duration), и цена ролика меняется вместе с ней. Порядок: цена проекта,
+    цена сметы, таблица motion_prices (config/paths.json; table — её запись для модели
+    и длительности проекта), и только последним cost_hint — цена РОЛИКА, так её печатает
+    video.js; при смене duration она врёт молча, поэтому идёт последней и с предупреждением.
     """
     if video.get("cost_per_sec"):
         return float(video["cost_per_sec"]), None, "project.json → video.cost_per_sec"
@@ -93,6 +98,11 @@ def kie_price_per_sec(video, budget):
             if k.endswith("credits_per_sec") and isinstance(v, (int, float))]
     if len(keys) == 1:
         return float(budget["prices"][keys[0]]), None, f"budget.json → prices.{keys[0]}"
+    if table:
+        src = f"config/paths.json → motion_prices ({table['status'] or 'без статуса'})"
+        if table["credits_per_sec"] is not None:
+            return float(table["credits_per_sec"]), None, src
+        return None, float(table["credits_per_clip"]), src
     if video.get("cost_hint"):
         return None, float(video["cost_hint"]), "project.json → video.cost_hint (цена ролика)"
     return None, None, ""
@@ -144,9 +154,16 @@ def kie_preflight(args, cfg, pdir, pjson, project):
     scenes, unknown = kie_selection(project, only, args.block)
     retries = args.retries if args.retries is not None else cfg.get("default_retries", 1)
     batch_max = cfg.get("batch_max", 5)
-    pps, per_clip, price_src = kie_price_per_sec(video, budget)
+    try:
+        table, table_err = (motion_prices.lookup(cfg, model, duration) if model else None), ""
+    except motion_prices.NoPrice as e:
+        table, table_err = None, str(e)
+    pps, per_clip, price_src = kie_price_per_sec(video, budget, table)
     clip_cost = round(pps * float(duration), 2) if pps else per_clip
     batch_cost = round(len(scenes) * retries * clip_cost, 2) if clip_cost else None
+
+    def usd(credits):
+        return f"≈ ${motion_prices.usd(cfg, credits)}"
     ceiling = motion.get("ceiling_credits") or (motion.get("with_reserve") or {}).get("credits")
     names = {Path(pdir).name, str(project.get("project") or ""), str(pdir)} - {""}
     spent = kie_spent_video(names)
@@ -158,8 +175,16 @@ def kie_preflight(args, cfg, pdir, pjson, project):
     print(f"  цена                : " + (f"{pps} кр./с ({price_src}) → {clip_cost} кр. за ролик" if pps
                                        else f"{per_clip} кр. за ролик ({price_src})" if per_clip else "НЕТ"))
     if batch_cost is not None:
-        print(f"  партия              : до {batch_cost} кр. ({len(scenes)} × {retries} попытка × {clip_cost})")
-    print(f"  потолок сметы       : " + (f"{ceiling} кр. (budget.json → motion)" if ceiling else "НЕТ"))
+        print(f"  партия              : до {batch_cost} кр. {usd(batch_cost)} "
+              f"({len(scenes)} × {retries} попытка × {clip_cost})")
+    # Смета или проект называют одну цену, таблица — другую: прайс Kie меняется (Grok с июля
+    # по октябрь 2026 вырос с 18 до 27 кр. за ролик 6 с), и устаревшая смета молча занижает партию.
+    if table and clip_cost and not price_src.startswith("config/paths.json") \
+            and abs(clip_cost - table["credits_per_clip"]) > 0.01:
+        print(f"  ВНИМАНИЕ: {price_src} даёт {clip_cost} кр. за ролик, а таблица motion_prices "
+              f"({table['status'] or 'без статуса'}) — {table['credits_per_clip']}. Цена расходится с таблицей: "
+              f"смета устарела или таблица. Сверь с книгой (clip_ledger.py report).")
+    print(f"  потолок сметы       : " + (f"{ceiling} кр. {usd(ceiling)} (budget.json → motion)" if ceiling else "НЕТ"))
     print(f"  по книге на видео   : {spent} кр. уже потрачено")
 
     if not model:
@@ -196,18 +221,20 @@ def kie_preflight(args, cfg, pdir, pjson, project):
     if not ceiling:
         lib.fail("в budget.json нет потолка видео (motion.ceiling_credits). Без потолка не летим.")
     if not clip_cost:
-        lib.fail("цена ролика неизвестна: нет ни video.cost_per_sec в project.json, ни "
-                 "motion.credits_per_sec в budget.json, ни video.cost_hint. Без цены партию не посчитать.")
-    if not pps:
+        lib.fail((table_err + ". " if table_err else "")
+                 + "цена ролика неизвестна: нет ни video.cost_per_sec в project.json, ни "
+                   "motion.credits_per_sec в budget.json, ни записи модели в motion_prices "
+                   "(config/paths.json), ни video.cost_hint. Без цены партию не посчитать.")
+    if price_src.startswith("project.json → video.cost_hint"):
         print(f"  ВНИМАНИЕ: cost_hint — цена ролика, а не секунды. Сменится video.duration — смета "
-              f"соврёт молча. Надёжнее video.cost_per_sec в project.json.")
+              f"соврёт молча. Надёжнее запись модели в motion_prices или video.cost_per_sec.")
 
     bal, err = clip_ledger.kie_balance(cfg)
     try:
         bal = float(bal) if bal is not None else None
     except (TypeError, ValueError):
         bal, err = None, f"баланс не число: {bal!r}"
-    print(f"  баланс Kie          : " + (f"{bal} кр." if bal is not None else f"нет данных ({err})"))
+    print(f"  баланс Kie          : " + (f"{bal} кр. {usd(bal)}" if bal is not None else f"нет данных ({err})"))
     # Книга знает только записанное. 12.10.2026 прогон 1 этого же клипа (81 кр.) прошёл,
     # а в книгу не попал, и по ней одной от потолка 198 оставалось 186 вместо 117 —
     # S01–S03 по 10 с прошли бы второй раз. Поэтому потрачено — большее из книги и
@@ -300,8 +327,8 @@ def main():
                     help="перекрыть оценку по журналу (НЕ снимает стоп по слову Grok, R10, "
                          "и потолок сметы Kie)")
     ap.add_argument("--provider", choices=["bridge", "api"], default=None,
-                    help="через что партия: bridge — мост Grok, api — Kie. "
-                         "По умолчанию project.json → video.provider, иначе bridge")
+                    help="через что партия: bridge — мост Grok, api — Kie. По умолчанию "
+                         "project.json → video.provider, иначе default_video_provider из конфига (api)")
     ap.add_argument("--provider-reason", default=None, metavar="ПРИЧИНА",
                     help="почему выбран именно этот провайдер; вместе с явным --provider уходит в "
                          "журнал решений clip-memory/reports/decisions.jsonl (ключ video-provider:<проект>)")
@@ -320,7 +347,8 @@ def main():
     bridge = Path(cfg["grok_bridge"])
     now_ms = time.time() * 1000
 
-    provider = args.provider or (project.get("video") or {}).get("provider") or "bridge"
+    provider = (args.provider or (project.get("video") or {}).get("provider")
+                or cfg.get("default_video_provider", "api"))
     if provider not in ("bridge", "api"):
         lib.fail(f"video.provider = «{provider}»: известны bridge и api. Укажи --provider явно.")
     print(f"── ПРЕДПОЛЁТ · {project.get('project', pjson.name)} · {provider} " + "─" * 14)

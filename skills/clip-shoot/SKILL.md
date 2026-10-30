@@ -1,6 +1,6 @@
 ---
 name: clip-shoot
-description: Съёмка видео партиями 4–5 через grok-bridge — предполёт перед каждой партией, одна попытка на сцену, паспорт и журнал. Use when shooting video clips for scenes via Grok bridge or Kie API.
+description: Съёмка видео партиями 4–5 через Kie API (по умолчанию) или мост Grok (явно) — предполёт перед каждой партией, одна попытка на сцену, паспорт и журнал. Use when shooting video clips for scenes via Kie API or the Grok bridge.
 ---
 
 # Clip Shoot
@@ -29,7 +29,7 @@ description: Съёмка видео партиями 4–5 через grok-brid
 
 ## Провайдер
 
-`video.provider` в project.json: `bridge` (Grok Desktop, бесплатно, квота) | `api` (Kie, платно). Тихий фолбэк bridge→api ЗАПРЕЩЁН — смена провайдера только явным решением Админа.
+`video.provider` в project.json: `api` (Kie, платно) — умолчание с 29.10.2026 (`default_video_provider` в `config/paths.json`: бесплатный доступ к Grok через мост закончился, слова Админа 29.10.2026) | `bridge` (Grok Desktop, квота; только если мост снова включён явно). Предполёт без `--provider` идёт веткой Kie и требует `--only` или `--block`; для моста — `--provider bridge --planned N`. Тихий фолбэк bridge↔api ЗАПРЕЩЁН — смена провайдера только явным решением Админа и между клипами (R10).
 
 **Партия через Kie** (`video.js --provider api`) — предполёт тем же провайдером и той же выборкой:
 
@@ -45,7 +45,7 @@ node "<pipeline>\video.js" project.<клип>.json --provider api --only S01,S02
 `shoot` и падения баланса Kie со снимка `budget.json → kie_balance.credits`), с вердиктом сметы и
 балансом Kie. Потолок `--force-estimate` не снимает. Хук пускает `video.js` только по маркеру Kie,
 только сценами из него и только при тех же `video.duration` и `video.model`; маркер моста партию
-Kie не пускает, и наоборот. После партии — `clip_ledger.py record --stage shoot --before … --after …`.
+Kie не пускает, и наоборот. После партии — `clip_ledger.py record --stage shoot --before … --after … --items N --model <video.model> --seconds <video.duration>` (так `report` посчитает цену принятой секунды движения).
 
 ## После партии
 
